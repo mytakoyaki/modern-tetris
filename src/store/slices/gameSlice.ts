@@ -127,7 +127,6 @@ export const gameSlice = createSlice({
     },
     rotateTetromino: (state) => {
       if (state.currentPiece.type) {
-        // Rotation logic will be implemented with collision detection
         state.currentPiece.rotation = (state.currentPiece.rotation + 1) % 4
       }
     },
