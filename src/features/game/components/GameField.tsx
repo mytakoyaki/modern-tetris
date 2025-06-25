@@ -16,7 +16,7 @@ const GRID_WIDTH = 10
 const GRID_HEIGHT = 20
 const CELL_SIZE = 32
 
-export default function GameField({ width = 320, height = 640 }: GameFieldProps) {
+export default function GameField({ width = 336, height = 656 }: GameFieldProps) {
   const { field, currentPiece, isGameRunning } = useSelector((state: RootState) => state.game)
   
 
@@ -80,7 +80,7 @@ export default function GameField({ width = 320, height = 640 }: GameFieldProps)
             key={`current-${index}`}
             sx={{
               position: 'absolute',
-              left: block.x * CELL_SIZE + 8, // +8 for padding
+              left: block.x * CELL_SIZE + 8, // +8 for margin
               top: block.y * CELL_SIZE + 8,
               width: CELL_SIZE,
               height: CELL_SIZE,
@@ -115,9 +115,11 @@ export default function GameField({ width = 320, height = 640 }: GameFieldProps)
         backgroundColor: 'rgba(26, 26, 26, 0.9)',
         border: '2px solid #00ff88',
         borderRadius: 2,
-        padding: 1,
         position: 'relative',
         overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -137,7 +139,8 @@ export default function GameField({ width = 320, height = 640 }: GameFieldProps)
           gridTemplateRows: `repeat(${GRID_HEIGHT}, ${CELL_SIZE}px)`,
           gap: 0,
           position: 'relative',
-          zIndex: 1
+          zIndex: 1,
+          margin: '8px' // 枠との適切な間隔を確保
         }}
       >
         {field.map((row, rowIndex) =>

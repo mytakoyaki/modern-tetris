@@ -11,6 +11,23 @@ import {
 import { detectSpin, isBackToBackEligible } from '@/features/game/utils/spinDetection'
 import { attemptSRSRotation } from '@/features/game/utils/srs'
 import type { SpinResult } from '@/types/spin'
+import type { PointsState, PointsGained, ExchangeResult } from '@/types/points'
+import { POINTS_CONFIG, EXCHANGE_COSTS, FEVER_CONFIG } from '@/types/points'
+import type { Rank, RankProgress } from '@/types/rank'
+import { RANKS } from '@/types/rank'
+import { 
+  calculatePointsGained, 
+  getCurrentExchangeCost, 
+  attemptExchange,
+  resetExchangeCount,
+  createInitialPointsState
+} from '@/features/game/utils/pointsSystem'
+import { 
+  getCurrentRank, 
+  calculateRankProgress, 
+  checkPromotion,
+  calculateRankBonus
+} from '@/features/game/utils/rankSystem'
 
 export interface GameState {
   // Game field (10x20 grid)
@@ -46,9 +63,12 @@ export interface GameState {
   
   // Score and stats
   score: number
-  points: number
   level: number
   lines: number
+  
+  // Point and Exchange system
+  pointSystem: PointsState
+  recentPointsGained: PointsGained[]
   
   // Time-based stats
   gameTime: number
@@ -66,16 +86,10 @@ export interface GameState {
     blocksUntilActivation: number
   }
   
-  // Exchange system
-  exchangeCount: number
-  exchangeCost: number
-  
   // Rank system
-  currentRank: {
-    name: string
-    threshold: number
-    index: number
-  }
+  currentRank: Rank
+  rankProgress: RankProgress
+  recentPromotions: Rank[]
   
   // Layout preference
   layoutOrientation: 'horizontal' | 'vertical'
@@ -97,9 +111,10 @@ const initialState: GameState = {
   isPaused: false,
   isGameOver: false,
   score: 0,
-  points: 0,
   level: 1,
   lines: 0,
+  pointSystem: createInitialPointsState(),
+  recentPointsGained: [],
   gameTime: 0,
   blocksPlaced: 0,
   lastSpin: null,
@@ -108,15 +123,16 @@ const initialState: GameState = {
   feverMode: {
     isActive: false,
     timeRemaining: 0,
-    blocksUntilActivation: 20
+    blocksUntilActivation: FEVER_CONFIG.BLOCKS_NEEDED
   },
-  exchangeCount: 0,
-  exchangeCost: 45,
-  currentRank: {
-    name: '無段',
-    threshold: 0,
-    index: 0
+  currentRank: RANKS[0],
+  rankProgress: {
+    currentRank: RANKS[0],
+    nextRank: RANKS[1],
+    progressToNext: 0,
+    isPromoted: false
   },
+  recentPromotions: [],
   layoutOrientation: 'horizontal'
 }
 
@@ -137,10 +153,29 @@ export const gameSlice = createSlice({
       state.isGameOver = true
     },
     updateScore: (state, action: PayloadAction<number>) => {
+      const oldScore = state.score
       state.score += action.payload
-    },
-    updatePoints: (state, action: PayloadAction<number>) => {
-      state.points += action.payload
+      
+      // 段位チェック
+      const promotionCheck = checkPromotion(oldScore, state.score)
+      
+      if (promotionCheck.wasPromoted) {
+        // 昇格処理
+        state.currentRank = promotionCheck.newRank
+        state.recentPromotions.push(promotionCheck.newRank)
+        
+        // 昇格ボーナス
+        const rankBonus = calculateRankBonus(promotionCheck.rankUp)
+        state.score += rankBonus.scoreBonus
+        state.pointSystem.totalPoints += rankBonus.pointBonus
+        
+        // 昇格ボーナスの記録
+        const promotionPoints = calculatePointsGained('rank-bonus', rankBonus.pointBonus)
+        state.recentPointsGained.push(promotionPoints)
+      }
+      
+      // 段位進捗更新
+      state.rankProgress = calculateRankProgress(state.score)
     },
     spawnTetromino: (state, action: PayloadAction<{type: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L', x?: number, y?: number}>) => {
       // ゲームオーバー判定
@@ -171,6 +206,14 @@ export const gameSlice = createSlice({
           state.currentPiece.x += action.payload.dx
           state.currentPiece.y += action.payload.dy
           state.lastAction = action.payload.dy > 0 ? 'drop' : 'move'
+          
+          // ソフトドロップポイント（下方向の移動時）
+          if (action.payload.dy > 0) {
+            const pointsGained = calculatePointsGained('soft-drop', action.payload.dy)
+            state.pointSystem.totalPoints += pointsGained.total
+            state.pointSystem.lastDropBonus = pointsGained.total
+            state.recentPointsGained.push(pointsGained)
+          }
         }
       }
     },
@@ -198,11 +241,21 @@ export const gameSlice = createSlice({
     hardDropTetromino: (state) => {
       if (state.currentPiece.type) {
         const tetromino = Tetromino.fromData(state.currentPiece)
+        const initialY = tetromino.y
         
         // 着地するまで下に移動
         while (canMoveTetromino(tetromino, 0, 1, state.field)) {
           tetromino.moveDown()
           state.currentPiece.y = tetromino.y
+        }
+        
+        // ハードドロップポイント計算
+        const dropDistance = state.currentPiece.y - initialY
+        if (dropDistance > 0) {
+          const pointsGained = calculatePointsGained('hard-drop', dropDistance)
+          state.pointSystem.totalPoints += pointsGained.total
+          state.pointSystem.lastDropBonus = pointsGained.total
+          state.recentPointsGained.push(pointsGained)
         }
       }
     },
@@ -232,6 +285,11 @@ export const gameSlice = createSlice({
           // 基本スコア計算
           const lineScore = [0, 100, 400, 1000, 2000][completedLines.length] || 0
           let totalScore = lineScore * state.level
+          
+          // フィーバーモード倍率適用
+          if (state.feverMode.isActive) {
+            totalScore = Math.floor(totalScore * FEVER_CONFIG.SCORE_MULTIPLIER)
+          }
           
           // スピンボーナス適用
           if (spinResult.type) {
@@ -276,22 +334,31 @@ export const gameSlice = createSlice({
             state.level = newLevel
           }
           
-          // ポイント計算
-          state.points += 10 * completedLines.length
+          // ライン消去ボーナスポイント（追加実装予定）
         } else {
           // ライン消去なしの場合、コンボリセット
           state.comboCount = 0
           state.lastSpin = null
         }
         
+        // 基本設置ポイント
+        const placementPoints = calculatePointsGained('placement', 1)
+        state.pointSystem.totalPoints += placementPoints.total
+        state.recentPointsGained.push(placementPoints)
+        
+        // エクスチェンジカウントリセット（テトリミノ設置時）
+        state.pointSystem.exchangeCount = resetExchangeCount()
+        
         // 統計更新
         state.blocksPlaced += 1
         
         // フィーバーモードチェック
-        if (state.blocksPlaced % 20 === 0) {
+        if (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED === 0) {
           state.feverMode.isActive = true
-          state.feverMode.timeRemaining = 30000
-          state.feverMode.blocksUntilActivation = 20
+          state.feverMode.timeRemaining = FEVER_CONFIG.DURATION
+          state.feverMode.blocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED
+        } else {
+          state.feverMode.blocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED - (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED)
         }
         
         // 現在のピースをクリア
@@ -311,13 +378,39 @@ export const gameSlice = createSlice({
     },
     activateFeverMode: (state) => {
       state.feverMode.isActive = true
-      state.feverMode.timeRemaining = 30000 // 30 seconds
-      state.feverMode.blocksUntilActivation = 20
+      state.feverMode.timeRemaining = FEVER_CONFIG.DURATION
+      state.feverMode.blocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED
     },
     updateFeverTime: (state, action: PayloadAction<number>) => {
       state.feverMode.timeRemaining = Math.max(0, state.feverMode.timeRemaining - action.payload)
       if (state.feverMode.timeRemaining === 0) {
         state.feverMode.isActive = false
+      }
+    },
+    exchangePiece: (state, action: PayloadAction<{newPieceType: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L'}>) => {
+      const exchangeResult = attemptExchange(
+        state.pointSystem.totalPoints,
+        state.pointSystem.exchangeCount,
+        state.feverMode.isActive
+      )
+      
+      if (!exchangeResult.success) {
+        return // 交換失敗時はアクションなし
+      }
+      
+      const currentPieceType = state.currentPiece.type
+      const newPieceType = action.payload.newPieceType
+      
+      // ポイント・カウント更新
+      state.pointSystem.totalPoints = exchangeResult.remainingPoints
+      state.pointSystem.exchangeCount = exchangeResult.newExchangeCount
+      
+      // 現在のピースを新しいピースに交換
+      state.currentPiece = {
+        type: newPieceType,
+        x: 4,
+        y: 0,
+        rotation: 0
       }
     },
     resetGame: () => {
@@ -331,7 +424,6 @@ export const {
   pauseGame,
   endGame,
   updateScore,
-  updatePoints,
   spawnTetromino,
   moveTetromino,
   rotateTetromino,
@@ -341,6 +433,7 @@ export const {
   toggleLayoutOrientation,
   activateFeverMode,
   updateFeverTime,
+  exchangePiece,
   resetGame
 } = gameSlice.actions
 

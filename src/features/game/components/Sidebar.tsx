@@ -4,6 +4,10 @@ import React from 'react'
 import { Box, Paper, Typography, Divider } from '@mui/material'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store/store'
+import PointsDisplay from './PointsDisplay'
+import FeverModeDisplay from './FeverModeDisplay'
+import RankDisplay from './RankDisplay'
+import { getCurrentExchangeCost } from '../utils/pointsSystem'
 
 interface SidebarProps {
   position: 'left' | 'right'
@@ -12,21 +16,20 @@ interface SidebarProps {
 export default function Sidebar({ position }: SidebarProps) {
   const { 
     score, 
-    points, 
+    pointSystem, 
     level, 
     lines, 
     currentRank, 
     holdPieces, 
     nextPieces,
     feverMode,
-    exchangeCost,
     lastSpin,
     backToBackCount,
     comboCount
   } = useSelector((state: RootState) => state.game)
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
+  const formatNumber = (num: number | undefined) => {
+    return (num ?? 0).toLocaleString()
   }
 
   const formatTime = (seconds: number) => {
@@ -124,35 +127,14 @@ export default function Sidebar({ position }: SidebarProps) {
         </Paper>
 
         {/* Fever Mode */}
-        <Paper sx={{ 
-          p: 2, 
-          mb: 2, 
-          backgroundColor: feverMode.isActive ? 'rgba(255, 0, 0, 0.2)' : 'rgba(26, 26, 26, 0.9)',
-          border: feverMode.isActive ? '2px solid #ff0000' : 'none'
-        }}>
-          <Typography variant="h6" sx={{ color: feverMode.isActive ? '#ff0000' : '#ff8c00', mb: 1 }}>
-            FEVER
-          </Typography>
-          {feverMode.isActive ? (
-            <Typography variant="h6" sx={{ color: '#ff0000' }}>
-              {formatTime(Math.ceil(feverMode.timeRemaining / 1000))}
-            </Typography>
-          ) : (
-            <Typography variant="body2" sx={{ color: '#666' }}>
-              Blocks: {feverMode.blocksUntilActivation}/20
-            </Typography>
-          )}
-        </Paper>
+        <Box sx={{ mb: 2 }}>
+          <FeverModeDisplay variant="detailed" />
+        </Box>
 
         {/* Rank */}
-        <Paper sx={{ p: 2, mb: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
-          <Typography variant="h6" sx={{ color: '#ffd700', mb: 1 }}>
-            RANK
-          </Typography>
-          <Typography variant="h5" sx={{ color: '#fff' }}>
-            {currentRank.name}
-          </Typography>
-        </Paper>
+        <Box sx={{ mb: 2 }}>
+          <RankDisplay variant="detailed" />
+        </Box>
 
         {/* Spin Statistics */}
         <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
@@ -201,9 +183,14 @@ export default function Sidebar({ position }: SidebarProps) {
         </Typography>
         <Divider sx={{ my: 1, backgroundColor: '#333' }} />
         <Typography variant="body2" sx={{ color: '#666' }}>
-          Points: {formatNumber(points)}
+          Points: {formatNumber(pointSystem?.totalPoints)}
         </Typography>
       </Paper>
+
+      {/* Points System */}
+      <Box sx={{ mb: 2 }}>
+        <PointsDisplay variant="detailed" />
+      </Box>
 
       {/* Next Pieces */}
       <Paper sx={{ p: 2, mb: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
@@ -213,18 +200,6 @@ export default function Sidebar({ position }: SidebarProps) {
         {nextPieces.slice(0, 5).map(renderNextPiece)}
       </Paper>
 
-      {/* Exchange System */}
-      <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
-        <Typography variant="h6" sx={{ color: '#ff8c00', mb: 1 }}>
-          EXCHANGE
-        </Typography>
-        <Typography variant="h6" sx={{ color: feverMode.isActive ? '#00ff88' : '#fff' }}>
-          {feverMode.isActive ? 'FREE' : `${exchangeCost}P`}
-        </Typography>
-        <Typography variant="caption" sx={{ color: '#666' }}>
-          Press E to exchange
-        </Typography>
-      </Paper>
     </Box>
   )
 }

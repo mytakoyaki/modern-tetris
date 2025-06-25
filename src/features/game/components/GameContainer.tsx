@@ -9,6 +9,7 @@ import { toggleLayoutOrientation } from '@/store/slices/gameSlice'
 import GameField from './GameField'
 import Sidebar from './Sidebar'
 import GameControls from './GameControls'
+import FeverModeEffects from './FeverModeEffects'
 
 export default function GameContainer() {
   const dispatch = useDispatch()
@@ -51,7 +52,7 @@ export default function GameContainer() {
         padding: 2
       }}
     >
-      <GameField width={320} height={480} />
+      <GameField width={336} height={496} />
       <Box
         sx={{
           display: 'grid',
@@ -113,6 +114,9 @@ export default function GameContainer() {
 
       {/* Game Layout */}
       {layoutOrientation === 'horizontal' ? renderHorizontalLayout() : renderVerticalLayout()}
+
+      {/* Fever Mode Effects */}
+      <FeverModeEffects />
 
       {/* Background Pattern */}
       <Box

@@ -113,6 +113,34 @@ const RANKS = [
 ]
 ```
 
+## Phase 1.5: タイトル画面の実装（フルスクリーン最適化）
+
+### 1.5.1 タイトルメニューUI
+- フルスクリーン中央配置、レスポンシブ対応
+- ブランドカラー（#00ff88, #ffd700）とグラデーション背景
+- START/RANKING/SETTINGSボタン（MUI + Framer Motion推奨）
+- ボタンホバー・フォーカスアニメーション
+- キーボード（Enter/Space）・タッチ対応
+- サウンド/SE（Howler.js等で選択音）
+- アクセシビリティ（aria属性、Tabキー操作）
+
+### 1.5.2 状態管理・遷移
+- ReduxまたはuseStateで「menu: 'title' | 'game' | 'ranking' | 'settings'」管理
+- STARTでゲーム画面へ遷移、RANKING/SETTINGSも同様
+- ゲーム中はESCキーでタイトルに戻る
+
+### 1.5.3 背景・演出
+- パーティクル/グラデーション/動画背景（tsParticles, CSS, Three.js等）
+- フェードイン/アウト、スムーズなトランジション
+- フルスクリーン最適化（100vw/100vh, スクロール禁止, モバイル対応）
+
+### 1.5.4 実装例
+- `features/title/TitleMenu.tsx`（UI本体）
+- `store/slices/uiSlice.ts`（メニュー状態管理）
+- `components/shared/FullscreenContainer.tsx`（全画面ラッパー）
+
+---
+
 ## Phase 2: UI/UX機能強化 (中優先度)
 
 ### 2.1 レイアウト切り替えシステム
