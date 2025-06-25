@@ -4,6 +4,7 @@ import React from 'react'
 import { Box, Paper } from '@mui/material'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store/store'
+import { Tetromino } from '../utils/tetromino'
 
 interface GameFieldProps {
   width?: number
@@ -62,9 +63,45 @@ export default function GameField({ width = 320, height = 640 }: GameFieldProps)
   const renderCurrentPiece = () => {
     if (!currentPiece.type || !isGameRunning) return null
 
-    // TODO: Render current piece overlay
-    // This will be implemented when we add the tetromino shape data
-    return null
+    const tetromino = new Tetromino(
+      currentPiece.type,
+      currentPiece.x,
+      currentPiece.y
+    )
+    tetromino.rotation = currentPiece.rotation
+    const blocks = tetromino.getBlocks()
+
+    return (
+      <>
+        {blocks.map((block, index) => (
+          <Box
+            key={`current-${index}`}
+            sx={{
+              position: 'absolute',
+              left: block.x * CELL_SIZE + 8, // +8 for padding
+              top: block.y * CELL_SIZE + 8,
+              width: CELL_SIZE,
+              height: CELL_SIZE,
+              backgroundColor: tetromino.getColor(),
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: 0.5,
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+              zIndex: 2,
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.3) 100%)',
+                pointerEvents: 'none'
+              }
+            }}
+          />
+        ))}
+      </>
+    )
   }
 
   return (

@@ -7,7 +7,8 @@ export interface GameState {
   // Current piece
   currentPiece: {
     type: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L' | null
-    position: { x: number; y: number }
+    x: number
+    y: number
     rotation: number
   }
   
@@ -58,7 +59,8 @@ const initialState: GameState = {
   field: Array(20).fill(null).map(() => Array(10).fill(0)),
   currentPiece: {
     type: null,
-    position: { x: 4, y: 0 },
+    x: 4,
+    y: 0,
     rotation: 0
   },
   nextPieces: [],
@@ -109,6 +111,29 @@ export const gameSlice = createSlice({
     updatePoints: (state, action: PayloadAction<number>) => {
       state.points += action.payload
     },
+    spawnTetromino: (state, action: PayloadAction<{type: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L', x?: number, y?: number}>) => {
+      state.currentPiece = {
+        type: action.payload.type,
+        x: action.payload.x ?? 4,
+        y: action.payload.y ?? 0,
+        rotation: 0
+      }
+    },
+    moveTetromino: (state, action: PayloadAction<{dx: number, dy: number}>) => {
+      if (state.currentPiece.type) {
+        state.currentPiece.x += action.payload.dx
+        state.currentPiece.y += action.payload.dy
+      }
+    },
+    rotateTetromino: (state) => {
+      if (state.currentPiece.type) {
+        // Rotation logic will be implemented with collision detection
+        state.currentPiece.rotation = (state.currentPiece.rotation + 1) % 4
+      }
+    },
+    updateField: (state, action: PayloadAction<number[][]>) => {
+      state.field = action.payload
+    },
     toggleLayoutOrientation: (state) => {
       state.layoutOrientation = state.layoutOrientation === 'horizontal' ? 'vertical' : 'horizontal'
     },
@@ -135,6 +160,10 @@ export const {
   endGame,
   updateScore,
   updatePoints,
+  spawnTetromino,
+  moveTetromino,
+  rotateTetromino,
+  updateField,
   toggleLayoutOrientation,
   activateFeverMode,
   updateFeverTime,

@@ -8,6 +8,7 @@ import type { RootState } from '@/store/store'
 import { toggleLayoutOrientation } from '@/store/slices/gameSlice'
 import GameField from './GameField'
 import Sidebar from './Sidebar'
+import GameControls from './GameControls'
 
 export default function GameContainer() {
   const dispatch = useDispatch()
@@ -69,7 +70,7 @@ export default function GameContainer() {
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          {/* Additional controls or stats can go here */}
+          <GameControls />
         </Box>
       </Box>
     </Box>
