@@ -13,6 +13,7 @@ import GameControls from './GameControls'
 export default function GameContainer() {
   const dispatch = useDispatch()
   const { layoutOrientation } = useSelector((state: RootState) => state.game)
+  
 
   const handleToggleLayout = () => {
     dispatch(toggleLayoutOrientation())
@@ -30,7 +31,10 @@ export default function GameContainer() {
         padding: 2
       }}
     >
-      <Sidebar position="left" />
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Sidebar position="left" />
+        <GameControls />
+      </Box>
       <GameField />
       <Sidebar position="right" />
     </Box>

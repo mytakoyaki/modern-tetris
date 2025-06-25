@@ -19,7 +19,10 @@ export default function Sidebar({ position }: SidebarProps) {
     holdPieces, 
     nextPieces,
     feverMode,
-    exchangeCost
+    exchangeCost,
+    lastSpin,
+    backToBackCount,
+    comboCount
   } = useSelector((state: RootState) => state.game)
 
   const formatNumber = (num: number) => {
@@ -142,13 +145,44 @@ export default function Sidebar({ position }: SidebarProps) {
         </Paper>
 
         {/* Rank */}
-        <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+        <Paper sx={{ p: 2, mb: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
           <Typography variant="h6" sx={{ color: '#ffd700', mb: 1 }}>
             RANK
           </Typography>
           <Typography variant="h5" sx={{ color: '#fff' }}>
             {currentRank.name}
           </Typography>
+        </Paper>
+
+        {/* Spin Statistics */}
+        <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+          <Typography variant="h6" sx={{ color: '#a020f0', mb: 1 }}>
+            SPIN STATS
+          </Typography>
+          
+          {lastSpin?.type && (
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#00ff88' }}>
+                Last: {lastSpin.type} {lastSpin.variant}
+              </Typography>
+            </Box>
+          )}
+          
+          {backToBackCount > 0 && (
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="body2" sx={{ color: '#ff8c00' }}>
+                Back-to-Back: {backToBackCount}
+              </Typography>
+            </Box>
+          )}
+          
+          {comboCount > 0 && (
+            <Box>
+              <Typography variant="body2" sx={{ color: '#ffd700' }}>
+                Combo: {comboCount}
+              </Typography>
+            </Box>
+          )}
         </Paper>
       </Box>
     )

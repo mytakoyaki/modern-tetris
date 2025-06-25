@@ -5,6 +5,7 @@ import { Box, Paper } from '@mui/material'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store/store'
 import { Tetromino } from '../utils/tetromino'
+import SpinDisplay from './SpinDisplay'
 
 interface GameFieldProps {
   width?: number
@@ -17,6 +18,7 @@ const CELL_SIZE = 32
 
 export default function GameField({ width = 320, height = 640 }: GameFieldProps) {
   const { field, currentPiece, isGameRunning } = useSelector((state: RootState) => state.game)
+  
 
   const renderCell = (row: number, col: number) => {
     const cellValue = field[row][col]
@@ -143,6 +145,9 @@ export default function GameField({ width = 320, height = 640 }: GameFieldProps)
         )}
       </Box>
       {renderCurrentPiece()}
+      
+      {/* Spin display overlay */}
+      <SpinDisplay />
       
       {!isGameRunning && (
         <Box
