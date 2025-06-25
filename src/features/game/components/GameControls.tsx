@@ -128,7 +128,7 @@ export default function GameControls() {
     return () => {
       window.removeEventListener('keydown', handleKeyPress)
     }
-  }, [dispatch, isGameRunning, isPaused, isGameOver])
+  }, [dispatch, isGameRunning, isPaused, isGameOver, currentPiece, field])
 
   return (
     <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>

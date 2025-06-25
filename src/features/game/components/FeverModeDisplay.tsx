@@ -41,7 +41,7 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
   const getProgressColor = () => {
     if (feverMode.isActive) {
       const ratio = feverMode.timeRemaining / FEVER_CONFIG.DURATION
-      if (ratio > 0.5) return '#ff0000'
+      if (ratio > 0.5) return '#ff8c00'
       if (ratio > 0.2) return '#ff8c00'
       return '#ffff00'
     }
@@ -56,13 +56,13 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
             <Chip
               label="FEVER"
               sx={{
-                backgroundColor: '#ff0000',
+                backgroundColor: '#ff8c00',
                 color: '#fff',
                 fontWeight: 'bold',
                 animation: 'pulse 1s infinite'
               }}
             />
-            <Typography variant="body2" sx={{ color: '#ff0000', fontWeight: 'bold' }}>
+            <Typography variant="body2" sx={{ color: '#ff8c00', fontWeight: 'bold' }}>
               {formatTime(feverMode.timeRemaining)}
             </Typography>
           </>
@@ -83,16 +83,16 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
   return (
     <Paper sx={{ 
       p: 2, 
-      backgroundColor: feverMode.isActive ? 'rgba(255, 0, 0, 0.1)' : 'rgba(26, 26, 26, 0.9)',
-      border: feverMode.isActive ? '2px solid #ff0000' : '1px solid transparent',
+      backgroundColor: feverMode.isActive ? 'rgba(255, 140, 0, 0.1)' : 'rgba(26, 26, 26, 0.9)',
+      border: feverMode.isActive ? '2px solid #ff8c00' : '1px solid transparent',
       borderRadius: 2,
       animation: feverMode.isActive ? 'glow 2s ease-in-out infinite alternate' : 'none',
       '@keyframes glow': {
         from: {
-          boxShadow: '0 0 5px #ff0000',
+          boxShadow: '0 0 5px #ff8c00',
         },
         to: {
-          boxShadow: '0 0 20px #ff0000, 0 0 30px #ff0000',
+          boxShadow: '0 0 20px #ff8c00, 0 0 30px #ff8c00',
         },
       },
       '@keyframes pulse': {
@@ -104,7 +104,7 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
       <Typography 
         variant="h6" 
         sx={{ 
-          color: feverMode.isActive ? '#ff0000' : '#ff8c00', 
+          color: feverMode.isActive ? '#ff8c00' : '#ff8c00', 
           mb: 1,
           fontWeight: 'bold'
         }}
@@ -117,7 +117,7 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
           <Typography 
             variant="h4" 
             sx={{ 
-              color: '#ff0000', 
+              color: '#ff8c00', 
               mb: 1, 
               fontWeight: 'bold',
               textAlign: 'center'

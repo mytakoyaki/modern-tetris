@@ -31,7 +31,7 @@ import {
 
 export interface GameState {
   // Game field (10x20 grid)
-  field: number[][]
+  field: (number | null)[][]
   
   // Current piece
   currentPiece: {
@@ -40,6 +40,11 @@ export interface GameState {
     y: number
     rotation: number
   }
+  
+  // Hold pieces (up to 2 slots)
+  holdSlots: [string | null, string | null]
+  canHold: boolean
+  usedHoldSlots: number[]
   
   // Last action for spin detection
   lastAction: 'move' | 'rotate' | 'drop' | null
@@ -53,8 +58,6 @@ export interface GameState {
   // Next pieces
   nextPieces: ('I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L')[]
   
-  // Hold pieces (up to 2 slots)
-  holdPieces: [string | null, string | null]
   
   // Game state
   isGameRunning: boolean
@@ -96,17 +99,19 @@ export interface GameState {
 }
 
 const initialState: GameState = {
-  field: Array(20).fill(null).map(() => Array(10).fill(0)),
+  field: Array(20).fill(null).map(() => Array(10).fill(null)),
   currentPiece: {
     type: null,
     x: 4,
     y: 0,
     rotation: 0
   },
+  holdSlots: [null, null],
+  canHold: true,
+  usedHoldSlots: [],
   lastAction: null,
   lastRotationKick: null,
   nextPieces: [],
-  holdPieces: [null, null],
   isGameRunning: false,
   isPaused: false,
   isGameOver: false,
@@ -178,6 +183,9 @@ export const gameSlice = createSlice({
       state.rankProgress = calculateRankProgress(state.score)
     },
     spawnTetromino: (state, action: PayloadAction<{type: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L', x?: number, y?: number}>) => {
+      // ゲームが実行中でない場合は何もしない
+      if (!state.isGameRunning) return
+      
       // ゲームオーバー判定
       if (!canSpawnTetromino(action.payload.type, state.field)) {
         state.isGameRunning = false
@@ -398,7 +406,6 @@ export const gameSlice = createSlice({
         return // 交換失敗時はアクションなし
       }
       
-      const currentPieceType = state.currentPiece.type
       const newPieceType = action.payload.newPieceType
       
       // ポイント・カウント更新
@@ -413,6 +420,52 @@ export const gameSlice = createSlice({
         rotation: 0
       }
     },
+    holdPiece: (state, action: PayloadAction<{slotIndex: 0 | 1}>) => {
+      if (!state.canHold || state.usedHoldSlots.includes(action.payload.slotIndex)) {
+        return
+      }
+      
+      const slotIndex = action.payload.slotIndex
+      const currentPieceType = state.currentPiece.type
+      const heldPieceType = state.holdSlots[slotIndex]
+      
+      if (currentPieceType) {
+        // ホールドスロットにピースを保存
+        state.holdSlots[slotIndex] = currentPieceType
+        state.usedHoldSlots.push(slotIndex)
+        
+        if (heldPieceType) {
+          // ホールドスロットにピースがある場合、交換
+          state.currentPiece = {
+            type: heldPieceType as 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L',
+            x: 4,
+            y: 0,
+            rotation: 0
+          }
+        } else {
+          // ホールドスロットが空の場合、新しいピースをスポーン
+          if (state.nextPieces.length > 0) {
+            state.currentPiece = {
+              type: state.nextPieces[0],
+              x: 4,
+              y: 0,
+              rotation: 0
+            }
+            state.nextPieces.shift()
+          }
+        }
+      }
+    },
+    
+    updateNextPieces: (state, action: PayloadAction<('I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L')[]>) => {
+      state.nextPieces = action.payload
+    },
+    
+    resetHoldSlots: (state) => {
+      state.usedHoldSlots = []
+      state.canHold = true
+    },
+    
     resetGame: () => {
       return initialState
     }
@@ -434,6 +487,9 @@ export const {
   activateFeverMode,
   updateFeverTime,
   exchangePiece,
+  holdPiece,
+  updateNextPieces,
+  resetHoldSlots,
   resetGame
 } = gameSlice.actions
 

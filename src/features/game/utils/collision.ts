@@ -31,8 +31,9 @@ export function checkBlockCollision(blocks: Block[], field: number[][]): boolean
     if (block.x < 0 || block.x >= GRID_WIDTH || block.y < 0 || block.y >= GRID_HEIGHT) {
       return true
     }
-    // フィールド上のブロックと衝突していないかチェック
-    return field[block.y][block.x] === 0
+    // フィールド上のブロックと衝突していないかチェック（nullまたは0は空きセル）
+    const cellValue = field[block.y][block.x]
+    return cellValue === null || cellValue === 0
   })
 }
 

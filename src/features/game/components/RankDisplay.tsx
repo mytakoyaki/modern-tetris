@@ -18,7 +18,7 @@ interface RankDisplayProps {
 }
 
 export default function RankDisplay({ variant = 'compact' }: RankDisplayProps) {
-  const { currentRank, rankProgress, score, recentPromotions } = useSelector((state: RootState) => state.game)
+  const { currentRank, rankProgress, recentPromotions } = useSelector((state: RootState) => state.game)
 
   const rankColor = getRankColor(currentRank)
   const rankTitle = getRankTitle(currentRank)

@@ -24,6 +24,27 @@ export class Tetromino {
     return shape.rotations[nextRotation]
   }
 
+  public getRotation(rotation: number): number[][] {
+    const shape = TETROMINO_TYPES[this.type]
+    const normalizedRotation = ((rotation % shape.rotations.length) + shape.rotations.length) % shape.rotations.length
+    return shape.rotations[normalizedRotation]
+  }
+
+  public rotateCounterClockwise(): void {
+    const shape = TETROMINO_TYPES[this.type]
+    this.rotation = (this.rotation - 1 + shape.rotations.length) % shape.rotations.length
+  }
+
+  public setPosition(x: number, y: number): void {
+    this.x = x
+    this.y = y
+  }
+
+  public setRotation(rotation: number): void {
+    const shape = TETROMINO_TYPES[this.type]
+    this.rotation = ((rotation % shape.rotations.length) + shape.rotations.length) % shape.rotations.length
+  }
+
   public rotate(): void {
     const shape = TETROMINO_TYPES[this.type]
     this.rotation = (this.rotation + 1) % shape.rotations.length
@@ -101,5 +122,96 @@ export class Tetromino {
       y: this.y,
       rotation: this.rotation
     }
+  }
+
+  public getBlockPositions(): Array<{x: number, y: number}> {
+    const positions: Array<{x: number, y: number}> = []
+    const matrix = this.getCurrentRotation()
+    
+    for (let row = 0; row < matrix.length; row++) {
+      for (let col = 0; col < matrix[row].length; col++) {
+        if (matrix[row][col] === 1) {
+          positions.push({
+            x: this.x + col,
+            y: this.y + row
+          })
+        }
+      }
+    }
+    
+    return positions
+  }
+}
+
+/**
+ * テトリミノの7-bagシステム
+ * HTML版の機能を移植
+ */
+export class TetrominoBag {
+  private bag: TetrominoType[]
+  private currentIndex: number
+
+  constructor() {
+    this.bag = []
+    this.currentIndex = 0
+    this.refillBag()
+  }
+
+  /**
+   * バッグを再充填（7種類をシャッフル）
+   */
+  private refillBag(): void {
+    this.bag = [...TETROMINO_NAMES]
+    
+    // Fisher-Yatesシャッフル
+    for (let i = this.bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[this.bag[i], this.bag[j]] = [this.bag[j], this.bag[i]]
+    }
+    
+    this.currentIndex = 0
+  }
+
+  /**
+   * 次のテトリミノタイプを取得
+   */
+  next(): TetrominoType {
+    if (this.currentIndex >= this.bag.length) {
+      this.refillBag()
+    }
+    
+    return this.bag[this.currentIndex++]
+  }
+
+  /**
+   * 先読み用：次のN個のテトリミノタイプを取得
+   */
+  peek(count: number): TetrominoType[] {
+    const result: TetrominoType[] = []
+    let tempIndex = this.currentIndex
+    let tempBag = [...this.bag]
+    
+    for (let i = 0; i < count; i++) {
+      if (tempIndex >= tempBag.length) {
+        // 新しいバッグを作成
+        tempBag = [...TETROMINO_NAMES]
+        for (let j = tempBag.length - 1; j > 0; j--) {
+          const k = Math.floor(Math.random() * (j + 1))
+          ;[tempBag[j], tempBag[k]] = [tempBag[k], tempBag[j]]
+        }
+        tempIndex = 0
+      }
+      
+      result.push(tempBag[tempIndex++])
+    }
+    
+    return result
+  }
+
+  /**
+   * バッグの状態をリセット
+   */
+  reset(): void {
+    this.refillBag()
   }
 }

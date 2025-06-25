@@ -7,7 +7,6 @@ import type { RootState } from '@/store/store'
 import PointsDisplay from './PointsDisplay'
 import FeverModeDisplay from './FeverModeDisplay'
 import RankDisplay from './RankDisplay'
-import { getCurrentExchangeCost } from '../utils/pointsSystem'
 
 interface SidebarProps {
   position: 'left' | 'right'
@@ -19,10 +18,8 @@ export default function Sidebar({ position }: SidebarProps) {
     pointSystem, 
     level, 
     lines, 
-    currentRank, 
-    holdPieces, 
+    holdSlots, 
     nextPieces,
-    feverMode,
     lastSpin,
     backToBackCount,
     comboCount
@@ -32,14 +29,9 @@ export default function Sidebar({ position }: SidebarProps) {
     return (num ?? 0).toLocaleString()
   }
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
 
   const renderHoldSlot = (index: number) => {
-    const piece = holdPieces[index]
+    const piece = holdSlots?.[index]
     return (
       <Paper
         key={`hold-${index}`}
@@ -197,7 +189,7 @@ export default function Sidebar({ position }: SidebarProps) {
         <Typography variant="h6" sx={{ color: '#ffd700', mb: 1 }}>
           NEXT
         </Typography>
-        {nextPieces.slice(0, 5).map(renderNextPiece)}
+        {nextPieces?.slice(0, 5).map(renderNextPiece) || []}
       </Paper>
 
     </Box>

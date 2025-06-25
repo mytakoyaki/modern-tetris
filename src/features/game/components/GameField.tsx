@@ -22,7 +22,7 @@ export default function GameField({ width = 336, height = 656 }: GameFieldProps)
 
   const renderCell = (row: number, col: number) => {
     const cellValue = field[row][col]
-    const isEmpty = cellValue === 0
+    const isEmpty = cellValue === null || cellValue === 0
     
     return (
       <Box
@@ -49,7 +49,9 @@ export default function GameField({ width = 336, height = 656 }: GameFieldProps)
     )
   }
 
-  const getCellColor = (cellValue: number) => {
+  const getCellColor = (cellValue: number | null) => {
+    if (cellValue === null || cellValue === 0) return 'transparent'
+    
     const colors = {
       1: '#00f5ff', // I piece - cyan
       2: '#ffd700', // O piece - yellow

@@ -2,8 +2,8 @@
 
 import dynamic from 'next/dynamic'
 
-const GameContainer = dynamic(
-  () => import('@/features/game/components/GameContainer'),
+const TetrisGame = dynamic(
+  () => import('@/features/game/components/TetrisGame'),
   { 
     ssr: false,
     loading: () => (
@@ -23,5 +23,5 @@ const GameContainer = dynamic(
 )
 
 export default function Home() {
-  return <GameContainer />
+  return <TetrisGame />
 }
