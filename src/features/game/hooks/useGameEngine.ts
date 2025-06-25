@@ -21,7 +21,9 @@ import {
   holdPiece,
   updateNextPieces,
   resetHoldSlots,
-  resetGame
+  resetGame,
+  updateLevel,
+  updateGameTime
 } from '@/store/slices/gameSlice'
 import { GameField } from '../utils/gameField'
 import { useKeyboardInput } from './useKeyboardInput'
@@ -34,6 +36,8 @@ export const useGameEngine = () => {
   const gameFieldRef = useRef<GameField | null>(null)
   const animationFrameRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number>(0)
+  const localGameTimeRef = useRef<number>(0)
+  const lastSyncTimeRef = useRef<number>(0)
 
   // ゲームフィールド初期化
   useEffect(() => {
@@ -98,6 +102,21 @@ export const useGameEngine = () => {
       dispatch(updateFeverTime(deltaTime))
     }
 
+    // ローカルゲーム時間更新
+    localGameTimeRef.current += deltaTime
+
+    // 100msごとにReduxに同期（より滑らかな更新のため）
+    if (localGameTimeRef.current - lastSyncTimeRef.current >= 100) {
+      dispatch(updateGameTime(localGameTimeRef.current - lastSyncTimeRef.current))
+      lastSyncTimeRef.current = localGameTimeRef.current
+    }
+
+    // 時間ベースのレベルアップ（30秒ごと）
+    const timeBasedLevel = Math.floor(localGameTimeRef.current / 30000) + 1
+    if (timeBasedLevel > gameState.level) {
+      dispatch(updateLevel(timeBasedLevel))
+    }
+
     // 次のフレーム
     animationFrameRef.current = requestAnimationFrame(gameLoop)
   }, [gameState.isGameRunning, gameState.isPaused, gameState.level, gameState.feverMode.isActive, dispatch])
@@ -137,6 +156,8 @@ export const useGameEngine = () => {
         dispatch(updateField(displayField))
         
         lastTimeRef.current = performance.now()
+        localGameTimeRef.current = 0
+        lastSyncTimeRef.current = 0
         animationFrameRef.current = requestAnimationFrame(gameLoop)
       } else {
         // スポーンに失敗した場合

@@ -7,6 +7,7 @@ import type { RootState } from '@/store/store'
 import PointsDisplay from './PointsDisplay'
 import ExchangeControls from './ExchangeControls'
 import GameControls from './GameControls'
+import ProgressGauge from './ProgressGauge'
 
 interface SidebarProps {
   position: 'left' | 'right'
@@ -247,6 +248,23 @@ export default function Sidebar({ position }: SidebarProps) {
               <Typography variant="h4" sx={{ color: '#fff', mb: 1.5, fontSize: '1.8rem', textAlign: 'center' }}>
                 {level}
               </Typography>
+              
+              {/* Level Progress Gauge */}
+              <Box sx={{ mb: 1.5 }}>
+                <ProgressGauge
+                  label="Level Progress"
+                  current={gameTime % 30000}
+                  max={30000}
+                  color="#ffd700"
+                  showPercentage={true}
+                  height={6}
+                />
+                {/* デバッグ情報 */}
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem', display: 'block', mt: 0.5 }}>
+                  Time: {Math.floor(gameTime / 1000)}s | Level: {level} | Progress: {Math.round((gameTime % 30000) / 300)}%
+                </Typography>
+              </Box>
+              
               <Divider sx={{ my: 1.5, backgroundColor: '#333' }} />
               <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
                 Lines: {formatNumber(lines)}
@@ -266,18 +284,42 @@ export default function Sidebar({ position }: SidebarProps) {
                   <Typography variant="h5" sx={{ color: '#ff69b4', mb: 1.5, fontSize: '1.4rem' }}>
                     ACTIVE
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#ff69b4', fontSize: '0.9rem' }}>
+                  <Typography variant="body2" sx={{ color: '#ff69b4', fontSize: '0.9rem', mb: 1.5 }}>
                     Time: {Math.ceil(feverMode.timeRemaining / 1000)}s
                   </Typography>
+                  
+                  {/* Fever Time Gauge */}
+                  <Box sx={{ mb: 1 }}>
+                    <ProgressGauge
+                      label="Fever Time"
+                      current={feverMode.timeRemaining}
+                      max={30000} // 30 seconds
+                      color="#ff69b4"
+                      showPercentage={false}
+                      height={6}
+                    />
+                  </Box>
                 </Box>
               ) : (
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="body1" sx={{ color: '#666', mb: 1.5, fontSize: '1rem' }}>
                     Inactive
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem' }}>
+                  <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem', mb: 1.5 }}>
                     Next: {20 - (feverMode.blocksUntilActivation % 20)} blocks
                   </Typography>
+                  
+                  {/* Fever Activation Gauge */}
+                  <Box sx={{ mb: 1 }}>
+                    <ProgressGauge
+                      label="Activation"
+                      current={20 - (feverMode.blocksUntilActivation % 20)}
+                      max={20}
+                      color="#ff69b4"
+                      showValues={true}
+                      height={6}
+                    />
+                  </Box>
                 </Box>
               )}
             </Paper>
@@ -322,7 +364,7 @@ export default function Sidebar({ position }: SidebarProps) {
           <Typography variant="h6" sx={{ color: '#ffd700', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
             RANK
           </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
             <Box sx={{ textAlign: 'center', flex: 1 }}>
               <Typography variant="h5" sx={{ color: '#ffd700', mb: 1, fontSize: '1.6rem' }}>
                 {currentRank.name}
@@ -340,7 +382,20 @@ export default function Sidebar({ position }: SidebarProps) {
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ mt: 1.5, textAlign: 'center' }}>
+          
+          {/* Rank Progress Gauge */}
+          <Box sx={{ mb: 1 }}>
+            <ProgressGauge
+              label="Rank Progress"
+              current={Math.round(rankProgress.progressToNext * 100)}
+              max={100}
+              color="#00ff88"
+              showPercentage={true}
+              height={8}
+            />
+          </Box>
+          
+          <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" sx={{ color: '#fff', fontSize: '0.9rem' }}>
               Progress: {Math.round(rankProgress.progressToNext * 100)}%
             </Typography>

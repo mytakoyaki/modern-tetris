@@ -337,12 +337,6 @@ export const gameSlice = createSlice({
           state.score += totalScore
           state.lines += completedLines.length
           
-          // レベルアップ判定（10ライン毎にレベルアップ）
-          const newLevel = Math.floor(state.lines / 10) + 1
-          if (newLevel > state.level) {
-            state.level = newLevel
-          }
-          
           // ライン消去ボーナスポイント（追加実装予定）
         } else {
           // ライン消去なしの場合、コンボリセット
@@ -399,6 +393,12 @@ export const gameSlice = createSlice({
       if (state.feverMode.timeRemaining === 0) {
         state.feverMode.isActive = false
       }
+    },
+    updateLevel: (state, action: PayloadAction<number>) => {
+      state.level = action.payload
+    },
+    updateGameTime: (state, action: PayloadAction<number>) => {
+      state.gameTime += action.payload
     },
     exchangePiece: (state) => {
       const exchangeResult = attemptExchange(
@@ -504,6 +504,8 @@ export const {
   toggleLayoutOrientation,
   activateFeverMode,
   updateFeverTime,
+  updateLevel,
+  updateGameTime,
   exchangePiece,
   holdPiece,
   updateNextPieces,
