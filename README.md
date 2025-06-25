@@ -1,4 +1,16 @@
+# ClaudeTetris - Next Generation Tetris Game
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## About ClaudeTetris
+
+ClaudeTetris is a modern Tetris implementation built with React, Next.js, TypeScript, and Redux Toolkit. It features:
+
+- **Modern Architecture**: React + Next.js + TypeScript + Redux Toolkit
+- **Material UI**: Beautiful, responsive design system
+- **Advanced Game Features**: Fever mode, point system, achievements
+- **Real-time Rankings**: Online leaderboard system
+- **Responsive Design**: Works on desktop and mobile devices
 
 ## Getting Started
 
