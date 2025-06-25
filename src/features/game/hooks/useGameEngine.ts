@@ -223,59 +223,21 @@ export const useGameEngine = () => {
 
   // ホールド処理
   const handleHold1 = useCallback(() => {
-    if (gameFieldRef.current && gameState.isGameRunning && gameState.canHold) {
-      const success = gameFieldRef.current.holdTetromino(0)
-      if (success) {
-        dispatch(holdPiece({ slotIndex: 0 }))
-        
-        // NEXTピースを更新
-        const nextPieces = gameFieldRef.current.getNextPieces(5)
-        dispatch(updateNextPieces(nextPieces))
-        
-        // 現在のピースを更新
-        const currentTetromino = gameFieldRef.current.currentTetromino
-        if (currentTetromino) {
-          dispatch(spawnTetromino({
-            type: currentTetromino.type,
-            x: currentTetromino.x,
-            y: currentTetromino.y
-          }))
-        }
-      }
+    if (gameState.isGameRunning) {
+      dispatch(holdPiece({ slotIndex: 0 }))
     }
-  }, [gameState.isGameRunning, gameState.canHold, dispatch])
+  }, [gameState.isGameRunning, dispatch])
 
   const handleHold2 = useCallback(() => {
-    if (gameFieldRef.current && gameState.isGameRunning && gameState.canHold) {
-      const success = gameFieldRef.current.holdTetromino(1)
-      if (success) {
-        dispatch(holdPiece({ slotIndex: 1 }))
-        
-        // NEXTピースを更新
-        const nextPieces = gameFieldRef.current.getNextPieces(5)
-        dispatch(updateNextPieces(nextPieces))
-        
-        // 現在のピースを更新
-        const currentTetromino = gameFieldRef.current.currentTetromino
-        if (currentTetromino) {
-          dispatch(spawnTetromino({
-            type: currentTetromino.type,
-            x: currentTetromino.x,
-            y: currentTetromino.y
-          }))
-        }
-      }
+    if (gameState.isGameRunning) {
+      dispatch(holdPiece({ slotIndex: 1 }))
     }
-  }, [gameState.isGameRunning, gameState.canHold, dispatch])
+  }, [gameState.isGameRunning, dispatch])
 
   // エクスチェンジ処理
   const handleExchange = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
-      // 次のテトリミノタイプを取得してエクスチェンジ
-      const nextPieces = gameFieldRef.current.getNextPieces(2)
-      if (nextPieces.length > 1) {
-        dispatch(exchangePiece({ newPieceType: nextPieces[1] }))
-      }
+      dispatch(exchangePiece())
     }
   }, [gameState.isGameRunning, dispatch])
 

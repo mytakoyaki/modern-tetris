@@ -18,9 +18,11 @@ import { RANKS } from '@/types/rank'
 import { 
   calculatePointsGained, 
   getCurrentExchangeCost, 
+  getNextExchangeCost, 
   attemptExchange,
   resetExchangeCount,
-  createInitialPointsState
+  createInitialPointsState,
+  getHoldCost
 } from '@/features/game/utils/pointsSystem'
 import { 
   getCurrentRank, 
@@ -376,6 +378,10 @@ export const gameSlice = createSlice({
           y: 0,
           rotation: 0
         }
+
+        // ホールドを再度可能にする
+        state.canHold = true
+        state.usedHoldSlots = []
       }
     },
     updateField: (state, action: PayloadAction<number[][]>) => {
@@ -395,34 +401,52 @@ export const gameSlice = createSlice({
         state.feverMode.isActive = false
       }
     },
-    exchangePiece: (state, action: PayloadAction<{newPieceType: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L'}>) => {
+    exchangePiece: (state) => {
       const exchangeResult = attemptExchange(
         state.pointSystem.totalPoints,
         state.pointSystem.exchangeCount,
         state.feverMode.isActive
-      )
-      
+      );
+
       if (!exchangeResult.success) {
-        return // 交換失敗時はアクションなし
+        return; // 交換失敗時はアクションなし
       }
-      
-      const newPieceType = action.payload.newPieceType
-      
+
       // ポイント・カウント更新
-      state.pointSystem.totalPoints = exchangeResult.remainingPoints
-      state.pointSystem.exchangeCount = exchangeResult.newExchangeCount
+      state.pointSystem.totalPoints = exchangeResult.remainingPoints;
+      state.pointSystem.exchangeCount = exchangeResult.newExchangeCount;
+      state.pointSystem.nextExchangeCost = getNextExchangeCost(exchangeResult.newExchangeCount);
+
+      // 交換可能なピースのリストを作成
+      const availablePieces = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+      const currentPieceType = state.currentPiece.type;
+      const filteredPieces = availablePieces.filter(p => p !== currentPieceType);
+
+      // 新しいピースをランダムに選択
+      const newPieceType = filteredPieces[Math.floor(Math.random() * filteredPieces.length)];
       
+      // 現在のピースの位置を保持
+      const { x, y } = state.currentPiece;
+
       // 現在のピースを新しいピースに交換
       state.currentPiece = {
         type: newPieceType,
-        x: 4,
-        y: 0,
+        x: x, // 元の位置を維持
+        y: y, // 元の位置を維持
         rotation: 0
-      }
+      };
     },
     holdPiece: (state, action: PayloadAction<{slotIndex: 0 | 1}>) => {
       if (!state.canHold || state.usedHoldSlots.includes(action.payload.slotIndex)) {
         return
+      }
+      
+      // ホールドコスト計算（フィーバーモード中は無料）
+      const holdCost = getHoldCost(state.feverMode.isActive)
+      
+      // ポイント不足チェック
+      if (state.pointSystem.totalPoints < holdCost) {
+        return // ポイント不足の場合はホールド不可
       }
       
       const slotIndex = action.payload.slotIndex
@@ -430,28 +454,34 @@ export const gameSlice = createSlice({
       const heldPieceType = state.holdSlots[slotIndex]
       
       if (currentPieceType) {
-        // ホールドスロットにピースを保存
+        // ポイント消費
+        state.pointSystem.totalPoints -= holdCost
+        
         state.holdSlots[slotIndex] = currentPieceType
         state.usedHoldSlots.push(slotIndex)
-        
+        state.canHold = false // 1ターンに1度だけホールド可能
+
         if (heldPieceType) {
-          // ホールドスロットにピースがある場合、交換
+          // ホールドされていたピースを現在のピースに設定
           state.currentPiece = {
             type: heldPieceType as 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L',
-            x: 4,
-            y: 0,
+            x: 4, // 初期位置
+            y: 0, // 初期位置
             rotation: 0
           }
         } else {
-          // ホールドスロットが空の場合、新しいピースをスポーン
-          if (state.nextPieces.length > 0) {
+          // ホールドが空の場合、次のピースを現在のピースに設定
+          const nextPiece = state.nextPieces.shift()
+          if (nextPiece) {
             state.currentPiece = {
-              type: state.nextPieces[0],
+              type: nextPiece,
               x: 4,
               y: 0,
               rotation: 0
             }
-            state.nextPieces.shift()
+          } else {
+            // ゲームオーバーなどのハンドリングが必要な場合
+            state.isGameOver = true
           }
         }
       }

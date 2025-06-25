@@ -6,6 +6,7 @@
 export interface PointsState {
   totalPoints: number
   exchangeCount: number
+  nextExchangeCost: number | null
   exchangeCosts: number[]
   blocksPlaced: number
   lastDropBonus: number

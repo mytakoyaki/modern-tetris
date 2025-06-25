@@ -177,6 +177,7 @@ export function createInitialPointsState(): PointsState {
   return {
     totalPoints: 0,
     exchangeCount: 0,
+    nextExchangeCost: EXCHANGE_COSTS[0],
     exchangeCosts: [...EXCHANGE_COSTS],
     blocksPlaced: 0,
     lastDropBonus: 0,
