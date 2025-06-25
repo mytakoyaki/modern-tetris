@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Box, Paper } from '@mui/material'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store/store'
@@ -16,9 +16,74 @@ const GRID_WIDTH = 10
 const GRID_HEIGHT = 20
 const CELL_SIZE = 32
 
-export default function GameField({ width = 336, height = 656 }: GameFieldProps) {
+export default function GameField({ width, height }: GameFieldProps) {
   const { field, currentPiece, isGameRunning } = useSelector((state: RootState) => state.game)
+  const [fieldSize, setFieldSize] = useState({ width: 336, height: 656 })
   
+  useEffect(() => {
+    const calculateFieldSize = () => {
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      
+      // 横向きレイアウトの場合
+      if (window.innerWidth > window.innerHeight) {
+        const availableWidth = viewportWidth - 400 - 32 // サイドバー分とパディング
+        const availableHeight = viewportHeight - 32 // パディング
+        
+        const maxWidth = availableWidth * 0.8
+        const maxHeight = availableHeight * 0.9
+        
+        // アスペクト比を維持しながらサイズを決定
+        const aspectRatio = (GRID_WIDTH * CELL_SIZE) / (GRID_HEIGHT * CELL_SIZE)
+        
+        let newWidth, newHeight
+        if (maxWidth / aspectRatio <= maxHeight) {
+          newWidth = maxWidth
+          newHeight = maxWidth / aspectRatio
+        } else {
+          newHeight = maxHeight
+          newWidth = maxHeight * aspectRatio
+        }
+        
+        setFieldSize({ width: newWidth, height: newHeight })
+      } else {
+        // 縦向きレイアウトの場合
+        const availableWidth = viewportWidth - 32
+        const availableHeight = viewportHeight - 200 - 32 // 下部コントロール分
+        
+        const maxWidth = availableWidth * 0.9
+        const maxHeight = availableHeight * 0.8
+        
+        const aspectRatio = (GRID_WIDTH * CELL_SIZE) / (GRID_HEIGHT * CELL_SIZE)
+        
+        let newWidth, newHeight
+        if (maxWidth / aspectRatio <= maxHeight) {
+          newWidth = maxWidth
+          newHeight = maxWidth / aspectRatio
+        } else {
+          newHeight = maxHeight
+          newWidth = maxHeight * aspectRatio
+        }
+        
+        setFieldSize({ width: newWidth, height: newHeight })
+      }
+    }
+    
+    calculateFieldSize()
+    window.addEventListener('resize', calculateFieldSize)
+    
+    return () => window.removeEventListener('resize', calculateFieldSize)
+  }, [])
+  
+  // プロパティで指定されたサイズがある場合はそれを使用
+  const finalWidth = width || fieldSize.width
+  const finalHeight = height || fieldSize.height
+  
+  // セルサイズを動的に計算
+  const cellSize = Math.min(
+    (finalWidth - 16) / GRID_WIDTH,  // パディングを考慮
+    (finalHeight - 16) / GRID_HEIGHT
+  )
 
   const renderCell = (row: number, col: number) => {
     const cellValue = field[row][col]
@@ -28,8 +93,8 @@ export default function GameField({ width = 336, height = 656 }: GameFieldProps)
       <Box
         key={`${row}-${col}`}
         sx={{
-          width: CELL_SIZE,
-          height: CELL_SIZE,
+          width: cellSize,
+          height: cellSize,
           border: '1px solid rgba(255, 255, 255, 0.1)',
           backgroundColor: isEmpty ? 'transparent' : getCellColor(cellValue),
           position: 'relative',
@@ -82,10 +147,10 @@ export default function GameField({ width = 336, height = 656 }: GameFieldProps)
             key={`current-${index}`}
             sx={{
               position: 'absolute',
-              left: block.x * CELL_SIZE + 8, // +8 for margin
-              top: block.y * CELL_SIZE + 8,
-              width: CELL_SIZE,
-              height: CELL_SIZE,
+              left: block.x * cellSize + 8, // +8 for margin
+              top: block.y * cellSize + 8,
+              width: cellSize,
+              height: cellSize,
               backgroundColor: tetromino.getColor(),
               border: '1px solid rgba(255, 255, 255, 0.3)',
               borderRadius: 0.5,
@@ -112,8 +177,8 @@ export default function GameField({ width = 336, height = 656 }: GameFieldProps)
     <Paper
       elevation={3}
       sx={{
-        width,
-        height,
+        width: finalWidth,
+        height: finalHeight,
         backgroundColor: 'rgba(26, 26, 26, 0.9)',
         border: '2px solid #00ff88',
         borderRadius: 2,
@@ -137,8 +202,8 @@ export default function GameField({ width = 336, height = 656 }: GameFieldProps)
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${GRID_WIDTH}, ${CELL_SIZE}px)`,
-          gridTemplateRows: `repeat(${GRID_HEIGHT}, ${CELL_SIZE}px)`,
+          gridTemplateColumns: `repeat(${GRID_WIDTH}, ${cellSize}px)`,
+          gridTemplateRows: `repeat(${GRID_HEIGHT}, ${cellSize}px)`,
           gap: 0,
           position: 'relative',
           zIndex: 1,

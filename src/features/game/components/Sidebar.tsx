@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux'
 import type { RootState } from '@/store/store'
 import PointsDisplay from './PointsDisplay'
 import ExchangeControls from './ExchangeControls'
+import GameControls from './GameControls'
 
 interface SidebarProps {
   position: 'left' | 'right'
@@ -22,7 +23,11 @@ export default function Sidebar({ position }: SidebarProps) {
     lastSpin,
     backToBackCount,
     comboCount,
-    feverMode
+    feverMode,
+    currentRank,
+    rankProgress,
+    blocksPlaced,
+    gameTime
   } = useSelector((state: RootState) => state.game)
 
   const formatNumber = (num: number | undefined) => {
@@ -217,87 +222,129 @@ export default function Sidebar({ position }: SidebarProps) {
 
   if (position === 'left') {
     return (
-      <Box sx={{ width: 160, padding: 2 }}>
-        {/* Hold Slots */}
-        <Paper sx={{ p: 2, mb: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
-          <Typography variant="h6" sx={{ color: '#00ff88', mb: 1 }}>
-            HOLD
-          </Typography>
-          {[0, 1].map(renderHoldSlot)}
-          <Typography variant="caption" sx={{ color: '#666' }}>
-            Cost: 15P each
-          </Typography>
-        </Paper>
+      <Box sx={{ width: '100%', padding: 1.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+          {/* 左列 */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Hold Slots */}
+            <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+              <Typography variant="h6" sx={{ color: '#00ff88', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
+                HOLD
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                {[0, 1].map(renderHoldSlot)}
+              </Box>
+              <Typography variant="caption" sx={{ color: '#666', fontSize: '0.8rem', textAlign: 'center', display: 'block', mt: 1 }}>
+                Cost: 15P each
+              </Typography>
+            </Paper>
 
-        {/* Level & Status */}
-        <Paper sx={{ p: 2, mb: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
-          <Typography variant="h6" sx={{ color: '#ffd700', mb: 1 }}>
-            LEVEL
-          </Typography>
-          <Typography variant="h4" sx={{ color: '#fff', mb: 1 }}>
-            {level}
-          </Typography>
-          <Divider sx={{ my: 1, backgroundColor: '#333' }} />
-          <Typography variant="body2" sx={{ color: '#666' }}>
-            Lines: {formatNumber(lines)}
-          </Typography>
-        </Paper>
+            {/* Level & Status */}
+            <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+              <Typography variant="h6" sx={{ color: '#ffd700', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
+                LEVEL
+              </Typography>
+              <Typography variant="h4" sx={{ color: '#fff', mb: 1.5, fontSize: '1.8rem', textAlign: 'center' }}>
+                {level}
+              </Typography>
+              <Divider sx={{ my: 1.5, backgroundColor: '#333' }} />
+              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
+                Lines: {formatNumber(lines)}
+              </Typography>
+            </Paper>
+          </Box>
 
-        {/* Fever Mode */}
-        <Paper sx={{ p: 2, mb: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
-          <Typography variant="h6" sx={{ color: '#ff69b4', mb: 1 }}>
-            FEVER MODE
-          </Typography>
-          {feverMode.isActive ? (
-            <Box>
-              <Typography variant="h5" sx={{ color: '#ff69b4', mb: 1 }}>
-                ACTIVE
+          {/* 右列 */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Fever Mode */}
+            <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+              <Typography variant="h6" sx={{ color: '#ff69b4', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
+                FEVER
               </Typography>
-              <Typography variant="body2" sx={{ color: '#ff69b4' }}>
-                Time: {Math.ceil(feverMode.timeRemaining / 1000)}s
-              </Typography>
-            </Box>
-          ) : (
-            <Box>
-              <Typography variant="body1" sx={{ color: '#666', mb: 1 }}>
-                Inactive
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#666' }}>
-                Next: {20 - (feverMode.blocksUntilActivation % 20)} blocks
-              </Typography>
-            </Box>
-          )}
-        </Paper>
+              {feverMode.isActive ? (
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" sx={{ color: '#ff69b4', mb: 1.5, fontSize: '1.4rem' }}>
+                    ACTIVE
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#ff69b4', fontSize: '0.9rem' }}>
+                    Time: {Math.ceil(feverMode.timeRemaining / 1000)}s
+                  </Typography>
+                </Box>
+              ) : (
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body1" sx={{ color: '#666', mb: 1.5, fontSize: '1rem' }}>
+                    Inactive
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem' }}>
+                    Next: {20 - (feverMode.blocksUntilActivation % 20)} blocks
+                  </Typography>
+                </Box>
+              )}
+            </Paper>
 
-        {/* Spin Statistics */}
-        <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
-          <Typography variant="h6" sx={{ color: '#a020f0', mb: 1 }}>
-            SPIN STATS
+            {/* Spin Statistics */}
+            <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+              <Typography variant="h6" sx={{ color: '#a020f0', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
+                SPIN
+              </Typography>
+              
+              <Box sx={{ textAlign: 'center' }}>
+                {lastSpin?.type && (
+                  <Box sx={{ mb: 1.5 }}>
+                    <Typography variant="body2" sx={{ color: '#00ff88', fontSize: '0.9rem' }}>
+                      Last: {lastSpin.type} {lastSpin.variant}
+                    </Typography>
+                  </Box>
+                )}
+                
+                {backToBackCount > 0 && (
+                  <Box sx={{ mb: 1.5 }}>
+                    <Typography variant="body2" sx={{ color: '#ff8c00', fontSize: '0.9rem' }}>
+                      B2B: {backToBackCount}
+                    </Typography>
+                  </Box>
+                )}
+                
+                {comboCount > 0 && (
+                  <Box>
+                    <Typography variant="body2" sx={{ color: '#ffd700', fontSize: '0.9rem' }}>
+                      Combo: {comboCount}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Paper>
+          </Box>
+        </Box>
+
+        {/* 段位表示（2列分使用） */}
+        <Paper sx={{ p: 2, mt: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)', gridColumn: 'span 2' }}>
+          <Typography variant="h6" sx={{ color: '#ffd700', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
+            RANK
           </Typography>
-          
-          {lastSpin?.type && (
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="body2" sx={{ color: '#00ff88' }}>
-                Last: {lastSpin.type} {lastSpin.variant}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ textAlign: 'center', flex: 1 }}>
+              <Typography variant="h5" sx={{ color: '#ffd700', mb: 1, fontSize: '1.6rem' }}>
+                {currentRank.name}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.8rem' }}>
+                Current Rank
               </Typography>
             </Box>
-          )}
-          
-          {backToBackCount > 0 && (
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="body2" sx={{ color: '#ff8c00' }}>
-                Back-to-Back: {backToBackCount}
+            <Box sx={{ textAlign: 'center', flex: 1 }}>
+              <Typography variant="h5" sx={{ color: '#00ff88', mb: 1, fontSize: '1.6rem' }}>
+                {rankProgress.nextRank?.name || 'MAX'}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.8rem' }}>
+                Next Rank
               </Typography>
             </Box>
-          )}
-          
-          {comboCount > 0 && (
-            <Box>
-              <Typography variant="body2" sx={{ color: '#ffd700' }}>
-                Combo: {comboCount}
-              </Typography>
-            </Box>
-          )}
+          </Box>
+          <Box sx={{ mt: 1.5, textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ color: '#fff', fontSize: '0.9rem' }}>
+              Progress: {Math.round(rankProgress.progressToNext * 100)}%
+            </Typography>
+          </Box>
         </Paper>
       </Box>
     )
@@ -305,39 +352,77 @@ export default function Sidebar({ position }: SidebarProps) {
 
   // Right sidebar
   return (
-    <Box sx={{ width: 160, padding: 2 }}>
-      {/* Score */}
-      <Paper sx={{ p: 2, mb: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
-        <Typography variant="h6" sx={{ color: '#00ff88', mb: 1 }}>
-          SCORE
-        </Typography>
-        <Typography variant="h4" sx={{ color: '#fff', mb: 1 }}>
-          {formatNumber(score)}
-        </Typography>
-        <Divider sx={{ my: 1, backgroundColor: '#333' }} />
-        <Typography variant="body2" sx={{ color: '#666' }}>
-          Points: {formatNumber(pointSystem?.totalPoints)}
-        </Typography>
-      </Paper>
+    <Box sx={{ width: '100%', padding: 1.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+        {/* 左列 */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Score */}
+          <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+            <Typography variant="h6" sx={{ color: '#00ff88', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
+              SCORE
+            </Typography>
+            <Typography variant="h4" sx={{ color: '#fff', mb: 1.5, fontSize: '1.8rem', textAlign: 'center' }}>
+              {formatNumber(score)}
+            </Typography>
+            <Divider sx={{ my: 1.5, backgroundColor: '#333' }} />
+            <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
+              Points: {formatNumber(pointSystem?.totalPoints)}
+            </Typography>
+          </Paper>
 
-      {/* Points System */}
-      <Box sx={{ mb: 2 }}>
-        <PointsDisplay variant="detailed" />
+          {/* Next Pieces */}
+          <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+            <Typography variant="h6" sx={{ color: '#ffd700', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
+              NEXT
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              {nextPieces?.[0] && renderNextPiece(nextPieces[0], 0)}
+            </Box>
+          </Paper>
+
+          {/* Game Controls */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 1,
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <GameControls />
+          </Box>
+        </Box>
+
+        {/* 右列 */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Points System */}
+          <Box>
+            <PointsDisplay variant="detailed" />
+          </Box>
+
+          {/* Exchange Controls */}
+          <Box>
+            <ExchangeControls />
+          </Box>
+
+          {/* Game Stats */}
+          <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+            <Typography variant="h6" sx={{ color: '#00ff88', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
+              STATS
+            </Typography>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ color: '#fff', fontSize: '0.9rem', mb: 1 }}>
+                Blocks: {blocksPlaced}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#fff', fontSize: '0.9rem', mb: 1 }}>
+                Time: {Math.floor(gameTime / 1000)}s
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#fff', fontSize: '0.9rem' }}>
+                Lines: {lines}
+              </Typography>
+            </Box>
+          </Paper>
+        </Box>
       </Box>
-
-      {/* Exchange Controls */}
-      <Box sx={{ mb: 2 }}>
-        <ExchangeControls />
-      </Box>
-
-      {/* Next Pieces */}
-      <Paper sx={{ p: 2, mb: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
-        <Typography variant="h6" sx={{ color: '#ffd700', mb: 1 }}>
-          NEXT
-        </Typography>
-        {nextPieces?.slice(0, 5).map(renderNextPiece) || []}
-      </Paper>
-
     </Box>
   )
 }

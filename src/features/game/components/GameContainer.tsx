@@ -8,7 +8,6 @@ import type { RootState } from '@/store/store'
 import { toggleLayoutOrientation } from '@/store/slices/gameSlice'
 import GameField from './GameField'
 import Sidebar from './Sidebar'
-import GameControls from './GameControls'
 import FeverModeEffects from './FeverModeEffects'
 
 export default function GameContainer() {
@@ -27,17 +26,43 @@ export default function GameContainer() {
         justifyContent: 'center',
         alignItems: 'flex-start',
         gap: 3,
-        maxWidth: 1200,
-        margin: '0 auto',
-        padding: 2
+        width: '100vw',
+        height: '100vh',
+        padding: 2,
+        boxSizing: 'border-box'
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 2,
+        flexShrink: 0,
+        width: 380,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
         <Sidebar position="left" />
-        <GameControls />
       </Box>
-      <GameField />
-      <Sidebar position="right" />
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        flex: 1,
+        minWidth: 0
+      }}>
+        <GameField />
+      </Box>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 2,
+        flexShrink: 0,
+        width: 380,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <Sidebar position="right" />
+      </Box>
     </Box>
   )
 
@@ -47,18 +72,28 @@ export default function GameContainer() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        maxWidth: 400,
-        margin: '0 auto',
-        padding: 2
+        width: '100vw',
+        height: '100vh',
+        padding: 2,
+        boxSizing: 'border-box'
       }}
     >
-      <GameField width={336} height={496} />
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        flex: 1,
+        minHeight: 0
+      }}>
+        <GameField />
+      </Box>
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: 2,
           width: '100%',
+          maxWidth: 600,
           mt: 2
         }}
       >
@@ -67,15 +102,6 @@ export default function GameContainer() {
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Sidebar position="right" />
-        </Box>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 1,
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <GameControls />
         </Box>
       </Box>
     </Box>

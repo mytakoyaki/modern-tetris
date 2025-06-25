@@ -18,28 +18,17 @@ const PIECE_COLORS = {
   'L': '#ffa500'
 }
 
-const PIECE_SHAPES = {
-  'I': '█████',
-  'O': '██\n██',
-  'T': ' █ \n███',
-  'S': ' ██\n██ ',
-  'Z': '██ \n ██',
-  'J': '█  \n███',
-  'L': '  █\n███'
-}
-
 export default function ExchangeControls() {
   const dispatch = useDispatch()
   const { pointSystem, feverMode, currentPiece, isGameRunning } = useSelector((state: RootState) => state.game)
   
   const canExchange = isGameRunning && 
                      (feverMode.isActive || 
-                      (pointSystem.totalPoints >= pointSystem.nextExchangeCost && 
-                       pointSystem.exchangesThisGame < 5))
+                      (pointSystem.totalPoints >= (pointSystem.nextExchangeCost || 0)))
 
-  const handleExchange = (pieceType: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L') => {
-    if (canExchange && pieceType !== currentPiece.type) {
-      dispatch(exchangePiece({ newPieceType: pieceType }))
+  const handleExchange = () => {
+    if (canExchange) {
+      dispatch(exchangePiece())
     }
   }
 
@@ -47,7 +36,7 @@ export default function ExchangeControls() {
     <Paper 
       elevation={2} 
       sx={{ 
-        p: 2, 
+        p: 1.5, 
         backgroundColor: 'rgba(26, 26, 26, 0.9)',
         border: '1px solid #00ff88',
         borderRadius: 2
@@ -57,9 +46,9 @@ export default function ExchangeControls() {
         variant="h6" 
         sx={{ 
           color: '#00ff88', 
-          mb: 2, 
+          mb: 1.5, 
           textAlign: 'center',
-          textShadow: '0 0 10px rgba(0, 255, 136, 0.5)'
+          fontSize: '1rem'
         }}
       >
         EXCHANGE
@@ -71,7 +60,8 @@ export default function ExchangeControls() {
           sx={{ 
             color: '#666', 
             textAlign: 'center',
-            fontStyle: 'italic'
+            fontStyle: 'italic',
+            fontSize: '0.8rem'
           }}
         >
           Start game to use exchange
@@ -80,8 +70,8 @@ export default function ExchangeControls() {
 
       {isGameRunning && (
         <>
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" sx={{ color: '#fff', mb: 1 }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Typography variant="body2" sx={{ color: '#fff', mb: 1, fontSize: '0.8rem' }}>
               Current: 
               <span style={{ 
                 color: currentPiece.type ? PIECE_COLORS[currentPiece.type] : '#666',
@@ -92,65 +82,35 @@ export default function ExchangeControls() {
               </span>
             </Typography>
             
-            <Typography variant="caption" sx={{ color: '#ccc' }}>
-              Cost: {feverMode.isActive ? 'FREE (Fever Mode)' : `${pointSystem.nextExchangeCost}P`}
+            <Typography variant="caption" sx={{ color: '#ccc', fontSize: '0.7rem' }}>
+              Cost: {feverMode.isActive ? 'FREE (Fever Mode)' : `${pointSystem.nextExchangeCost || 0}P`}
             </Typography>
           </Box>
 
-          <Grid container spacing={1}>
-            {PIECE_TYPES.map((pieceType) => (
-              <Grid item xs={12} key={pieceType}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  disabled={!canExchange || pieceType === currentPiece.type}
-                  onClick={() => handleExchange(pieceType)}
-                  sx={{
-                    minHeight: '48px',
-                    borderColor: PIECE_COLORS[pieceType],
-                    color: pieceType === currentPiece.type ? '#666' : PIECE_COLORS[pieceType],
-                    backgroundColor: pieceType === currentPiece.type ? 'rgba(102, 102, 102, 0.1)' : 'transparent',
-                    '&:hover': {
-                      backgroundColor: `${PIECE_COLORS[pieceType]}20`,
-                      borderColor: PIECE_COLORS[pieceType]
-                    },
-                    '&:disabled': {
-                      borderColor: '#333',
-                      color: '#666'
-                    },
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    px: 2
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontWeight: 'bold',
-                        fontFamily: 'monospace'
-                      }}
-                    >
-                      {pieceType}
-                    </Typography>
-                  </Box>
-                  
-                  <Box 
-                    sx={{ 
-                      fontSize: '0.7rem',
-                      fontFamily: 'monospace',
-                      lineHeight: 1,
-                      whiteSpace: 'pre-line',
-                      textAlign: 'right'
-                    }}
-                  >
-                    {PIECE_SHAPES[pieceType]}
-                  </Box>
-                </Button>
-              </Grid>
-            ))}
-          </Grid>
+          <Button
+            fullWidth
+            variant="outlined"
+            disabled={!canExchange}
+            onClick={handleExchange}
+            sx={{
+              minHeight: '40px',
+              borderColor: '#00ff88',
+              color: '#00ff88',
+              backgroundColor: 'transparent',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                borderColor: '#00ff88'
+              },
+              '&:disabled': {
+                borderColor: '#333',
+                color: '#666'
+              },
+              fontSize: '0.9rem',
+              fontWeight: 'bold'
+            }}
+          >
+            EXCHANGE PIECE
+          </Button>
 
           {!canExchange && (
             <Typography 
@@ -159,13 +119,14 @@ export default function ExchangeControls() {
                 color: '#ff6b6b', 
                 textAlign: 'center',
                 display: 'block',
-                mt: 2,
-                fontStyle: 'italic'
+                mt: 1.5,
+                fontStyle: 'italic',
+                fontSize: '0.7rem'
               }}
             >
-              {pointSystem.totalPoints < pointSystem.nextExchangeCost 
-                ? `Need ${pointSystem.nextExchangeCost - pointSystem.totalPoints}P more`
-                : 'Max exchanges reached (5/5)'
+              {pointSystem.totalPoints < (pointSystem.nextExchangeCost || 0)
+                ? `Need ${(pointSystem.nextExchangeCost || 0) - pointSystem.totalPoints}P more`
+                : 'Cannot exchange current piece'
               }
             </Typography>
           )}
