@@ -19,6 +19,7 @@ export interface LockResult {
 export interface DropResult {
   distance: number
   isSoftDrop: boolean
+  tetrominoLocked?: boolean
 }
 
 export class GameField {
@@ -69,6 +70,7 @@ export class GameField {
     
     this.softDropDistance = 0
     this.hardDropDistance = 0
+    this.justHardDropped = false
     
     // T-spin判定初期化
     this.lastActionWasRotation = false
@@ -113,6 +115,7 @@ export class GameField {
     this.lockResetCount = 0
     this.softDropDistance = 0
     this.hardDropDistance = 0
+    this.justHardDropped = false
     this.lastActionWasRotation = false
     this.lastRotationWasKick = false
     this.lastRotationDirection = null
@@ -223,6 +226,7 @@ export class GameField {
     }
     
     this.hardDropDistance = distance
+    this.justHardDropped = true
     this.lockTetromino() // 即座にロック
     
     return distance
@@ -358,7 +362,13 @@ export class GameField {
    * ゲームフィールドのアップデート（タイマー処理）
    */
   update(deltaTime: number): LockResult | null {
-    if (!this.currentTetromino) return { needsSpawn: true }
+    if (!this.currentTetromino) {
+      if (this.justHardDropped) {
+        this.justHardDropped = false
+        return { needsSpawn: true }
+      }
+      return { needsSpawn: true }
+    }
     
     // 落下タイマー更新
     this.dropTimer += deltaTime
@@ -458,6 +468,7 @@ export class GameField {
     this.lockResetCount = 0
     this.softDropDistance = 0
     this.hardDropDistance = 0
+    this.justHardDropped = false
     
     this.lastActionWasRotation = false
     this.lastRotationWasKick = false

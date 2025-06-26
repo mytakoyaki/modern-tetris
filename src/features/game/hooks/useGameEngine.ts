@@ -11,7 +11,6 @@ import {
   startGame, 
   endGame, 
   updateScore,
-  spawnTetromino,
   moveTetromino,
   rotateTetromino,
   hardDropTetromino,
@@ -21,7 +20,6 @@ import {
   exchangePiece,
   holdPiece,
   updateNextPieces,
-  resetHoldSlots,
   resetGame,
   updateLevel,
   updateGameTime,
@@ -121,19 +119,17 @@ export const useGameEngine = () => {
     // 最新のゲーム状態を取得
     const currentGameState = store.getState().game
     
-    console.log('Game loop executed:', {
-      isGameRunning: currentGameState.isGameRunning,
-      isPaused: currentGameState.isPaused,
-      hasGameField: !!gameFieldRef.current,
-      currentTime
-    })
+    // DEBUG: ゲームループの動作状態を表示（100フレームごと）
+    if (Math.floor(currentTime / 1000) % 2 === 0 && currentTime % 100 < 16) {
+      console.log('[DEBUG] Game Loop Status:', {
+        running: currentGameState.isGameRunning,
+        paused: currentGameState.isPaused,
+        currentTetromino: gameFieldRef.current?.currentTetromino?.type || 'none',
+        fieldHasContent: gameFieldRef.current?.field.some(row => row.some(cell => cell !== null)) || false
+      })
+    }
     
     if (!currentGameState.isGameRunning || currentGameState.isPaused || !gameFieldRef.current) {
-      console.log('Game loop early return:', {
-        isGameRunning: currentGameState.isGameRunning,
-        isPaused: currentGameState.isPaused,
-        hasGameField: !!gameFieldRef.current
-      })
       return
     }
 
@@ -145,23 +141,34 @@ export const useGameEngine = () => {
     
     if (updateResult) {
       if (updateResult.needsSpawn) {
+        console.log('[DEBUG] Spawning new tetromino...')
+        
         // 新しいテトリミノをスポーン
         if (!gameFieldRef.current.spawnTetromino()) {
-          // ゲームオーバー
+          console.log('[DEBUG] Game Over - cannot spawn tetromino')
           dispatchRef.current(endGame())
           return
         }
-        // スポーン成功時はReduxアクションを呼び出さない（GameFieldの状態を優先）
+        
+        console.log('[DEBUG] New tetromino spawned:', gameFieldRef.current.currentTetromino?.type)
+        
+        // スポーン成功時はNEXTピースのみ更新（テトリミノは表示フィールドに含まれる）
+        const nextPieces = gameFieldRef.current.getNextPieces(5)
+        dispatchRef.current(updateNextPieces(nextPieces))
       }
 
       if (updateResult.tetrominoLocked && updateResult.clearedLines) {
         // ライン消去処理
         const clearedLinesCount = updateResult.clearedLines.length
         if (clearedLinesCount > 0) {
+          console.log('[DEBUG] Lines cleared:', clearedLinesCount)
+          
           // スコア計算とRedux更新
           const baseScore = [0, 100, 400, 1000, 2000][clearedLinesCount] || 0
           const levelMultiplier = currentGameState.level
           const finalScore = baseScore * levelMultiplier
+          
+          console.log('[DEBUG] Score added:', finalScore)
           
           dispatchRef.current(updateScore(finalScore))
           dispatchRef.current(placeTetromino())
@@ -179,7 +186,7 @@ export const useGameEngine = () => {
       }
     }
 
-    // フィールド状態をReduxに同期
+    // フィールド状態をReduxに同期（現在のテトリミノを含む表示用フィールド）
     const displayField = gameFieldRef.current.getFieldWithCurrentTetromino()
     dispatchRef.current(updateField(displayField as any))
 
@@ -225,28 +232,23 @@ export const useGameEngine = () => {
       dispatchRef.current(updateField(emptyField as any))
       
       // 最初のテトリミノを生成
+      console.log('[DEBUG] Starting new game...')
+      
       const spawnSuccess = gameFieldRef.current.spawnTetromino()
-      console.log('Spawn success:', spawnSuccess)
       
       if (spawnSuccess) {
+        console.log('[DEBUG] Initial tetromino spawned:', gameFieldRef.current.currentTetromino?.type)
+        
         // 初期NEXTピースを設定
         const nextPieces = gameFieldRef.current.getNextPieces(5)
         dispatchRef.current(updateNextPieces(nextPieces))
         
-        // 現在のテトリミノをReduxに設定
-        const currentTetromino = gameFieldRef.current.currentTetromino
-        if (currentTetromino) {
-          console.log('Setting current tetromino:', currentTetromino)
-          dispatchRef.current(spawnTetromino({
-            type: currentTetromino.type,
-            x: currentTetromino.x,
-            y: currentTetromino.y
-          }))
-        }
+        // テトリミノは表示フィールドに含まれるのでReduxに追加不要
+      } else {
+        console.log('[DEBUG] Failed to spawn initial tetromino')
       }
       
       // ゲームを開始状態に設定
-      console.log('Dispatching startGame...')
       dispatchRef.current(startGame())
       
       // 初期落下速度を設定
@@ -255,20 +257,10 @@ export const useGameEngine = () => {
       lastTimeRef.current = performance.now()
       localGameTimeRef.current = 0
       lastSyncTimeRef.current = 0
-      console.log('Requesting animation frame...')
       animationFrameRef.current = requestAnimationFrame(gameLoop)
       
       // レベルゲージタイマーを開始
       startLevelGaugeTimer()
-
-      // 最初のピースが即座に落下し始めるように1フレーム進める
-      if (gameFieldRef.current) {
-        // レベル1の落下速度（1000ms）で1フレーム進める
-        console.log('Forcing first update...')
-        gameFieldRef.current.update(1000)
-      }
-    } else {
-      console.log('Game field is null!')
     }
   }, [gameLoop])
 
@@ -298,54 +290,37 @@ export const useGameEngine = () => {
   // 移動処理
   const handleMoveLeft = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
+      console.log('[DEBUG] Move left input')
       const result = gameFieldRef.current.moveTetromino(-1, 0)
       if (result) {
         dispatchRef.current(moveTetromino({ dx: -1, dy: 0 }))
-        
-        // ブロック設置統計を更新
-        if (result.tetrominoLocked) {
-          dispatchRef.current(updateSessionStats({
-            blocksPlaced: gameState.blocksPlaced + 1
-          }))
-        }
       }
     }
-  }, [gameState.isGameRunning, gameState.blocksPlaced])
+  }, [gameState.isGameRunning])
 
   const handleMoveRight = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
+      console.log('[DEBUG] Move right input')
       const result = gameFieldRef.current.moveTetromino(1, 0)
       if (result) {
         dispatchRef.current(moveTetromino({ dx: 1, dy: 0 }))
-        
-        // ブロック設置統計を更新
-        if (result.tetrominoLocked) {
-          dispatchRef.current(updateSessionStats({
-            blocksPlaced: gameState.blocksPlaced + 1
-          }))
-        }
       }
     }
-  }, [gameState.isGameRunning, gameState.blocksPlaced])
+  }, [gameState.isGameRunning])
 
   const handleSoftDrop = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
       const result = gameFieldRef.current.moveTetromino(0, 1)
       if (result) {
         dispatchRef.current(moveTetromino({ dx: 0, dy: 1 }))
-        
-        // ブロック設置統計を更新
-        if (result.tetrominoLocked) {
-          dispatchRef.current(updateSessionStats({
-            blocksPlaced: gameState.blocksPlaced + 1
-          }))
-        }
       }
     }
-  }, [gameState.isGameRunning, gameState.blocksPlaced])
+  }, [gameState.isGameRunning])
 
   const handleHardDrop = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
+      console.log('[DEBUG] Hard drop executed')
+      
       gameFieldRef.current.hardDrop()
       dispatchRef.current(hardDropTetromino())
       
@@ -368,12 +343,16 @@ export const useGameEngine = () => {
           tetrisCount: clearedLines.length === 4 ? gameState.tetrisCount + 1 : gameState.tetrisCount
         }))
       }
+      
+      // ハードドロップ後のスポーンはゲームループに任せる
+      // gameField.hardDrop()のlockTetromino()が呼ばれると、次のupdate()でneedsSpawnがtrueになる
     }
   }, [gameState.isGameRunning, gameState.level, gameState.blocksPlaced, gameState.lines, gameState.score, gameState.tetrisCount])
 
   // 回転処理
   const handleRotate = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
+      console.log('[DEBUG] Rotate input')
       const success = gameFieldRef.current.rotateTetromino(true)
       if (success) {
         dispatchRef.current(rotateTetromino())
@@ -449,24 +428,27 @@ export const useGameEngine = () => {
 
   // ゲーム開始時のループ開始
   useEffect(() => {
-    console.log('Game loop useEffect triggered:', {
+    console.log('[DEBUG] Game state changed:', {
       isGameRunning: gameState.isGameRunning,
       isPaused: gameState.isPaused,
-      hasAnimationFrame: !!animationFrameRef.current
+      isGameOver: gameState.isGameOver,
+      hasAnimationFrame: !!animationFrameRef.current,
+      score: gameState.score,
+      level: gameState.level
     })
     
     if (gameState.isGameRunning && !gameState.isPaused && !animationFrameRef.current) {
-      console.log('Starting game loop...')
+      console.log('[DEBUG] Starting game loop...')
       lastTimeRef.current = performance.now()
       animationFrameRef.current = requestAnimationFrame(gameLoop)
     }
     
     if (!gameState.isGameRunning && animationFrameRef.current) {
-      console.log('Stopping game loop...')
+      console.log('[DEBUG] Stopping game loop...')
       cancelAnimationFrame(animationFrameRef.current)
       animationFrameRef.current = null
     }
-  }, [gameState.isGameRunning, gameState.isPaused])
+  }, [gameState.isGameRunning, gameState.isPaused, gameState.isGameOver, gameState.score, gameState.level])
 
   // HMRによる再マウント時のゲーム状態復元
   useEffect(() => {

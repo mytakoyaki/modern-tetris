@@ -78,6 +78,9 @@ export interface GameState {
   // Time-based stats
   gameTime: number
   blocksPlaced: number
+  tetrisCount: number
+  holdCount: number
+  exchangeCount: number
   
   // Level gauge progress (独立したタイマー用)
   levelGaugeProgress: number
@@ -127,6 +130,9 @@ const initialState: GameState = {
   recentPointsGained: [],
   gameTime: 0,
   blocksPlaced: 0,
+  tetrisCount: 0,
+  holdCount: 0,
+  exchangeCount: 0,
   levelGaugeProgress: 0,
   lastSpin: null,
   backToBackCount: 0,

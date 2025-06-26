@@ -17,7 +17,7 @@ const GRID_HEIGHT = 20
 const CELL_SIZE = 32
 
 export default function GameField({ width, height }: GameFieldProps) {
-  const { field, currentPiece, isGameRunning } = useSelector((state: RootState) => state.game)
+  const { field, isGameRunning } = useSelector((state: RootState) => state.game)
   const [fieldSize, setFieldSize] = useState({ width: 336, height: 656 })
   
   useEffect(() => {
@@ -129,49 +129,7 @@ export default function GameField({ width, height }: GameFieldProps) {
     return colors[cellValue as keyof typeof colors] || '#666'
   }
 
-  const renderCurrentPiece = () => {
-    if (!currentPiece.type || !isGameRunning) return null
-
-    const tetromino = new Tetromino(
-      currentPiece.type,
-      currentPiece.x,
-      currentPiece.y
-    )
-    tetromino.rotation = currentPiece.rotation
-    const blocks = tetromino.getBlocks()
-
-    return (
-      <>
-        {blocks.map((block, index) => (
-          <Box
-            key={`current-${index}`}
-            sx={{
-              position: 'absolute',
-              left: block.x * cellSize + 8, // +8 for margin
-              top: block.y * cellSize + 8,
-              width: cellSize,
-              height: cellSize,
-              backgroundColor: tetromino.getColor(),
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: 0.5,
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-              zIndex: 2,
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.3) 100%)',
-                pointerEvents: 'none'
-              }
-            }}
-          />
-        ))}
-      </>
-    )
-  }
+  // currentPieceは表示フィールドに含まれるので別途描画不要
 
   return (
     <Paper
@@ -214,7 +172,7 @@ export default function GameField({ width, height }: GameFieldProps) {
           row.map((cell, colIndex) => renderCell(rowIndex, colIndex))
         )}
       </Box>
-      {renderCurrentPiece()}
+      {/* currentPieceは表示フィールドに含まれる */}
       
       {/* Spin display overlay */}
       <SpinDisplay />

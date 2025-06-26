@@ -18,6 +18,14 @@ import { isTetrominoLanded } from '../utils/collision'
 import { Tetromino } from '../utils/tetromino'
 
 export default function GameControls() {
+  // このコンポーネントはuseGameEngineと競合するため一時的に無効化
+  return (
+    <div style={{ color: '#666', fontSize: '12px', textAlign: 'center' }}>
+      ゲームコントロールはuseGameEngineで処理されます
+    </div>
+  )
+  
+  /*
   const dispatch = useDispatch()
   const { isGameRunning, isPaused, isGameOver, currentPiece, field, level } = useSelector((state: RootState) => state.game)
   
@@ -131,6 +139,14 @@ export default function GameControls() {
   }, [dispatch, isGameRunning, isPaused, isGameOver, currentPiece, field])
 
   return (
+    <div>コントロール無効化中</div>
+  )
+  */
+}
+
+/*
+function DisabledGameControls() {
+  return (
     <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
       <Typography variant="h6" sx={{ color: '#00ff88', mb: 2 }}>
         GAME CONTROLS
@@ -217,4 +233,4 @@ export default function GameControls() {
       )}
     </Paper>
   )
-}
+*/

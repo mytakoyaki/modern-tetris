@@ -8,7 +8,6 @@ import type { RootState } from '@/store/store'
 import { AchievementSummary } from '@/features/achievement'
 import PointsDisplay from './PointsDisplay'
 import ExchangeControls from './ExchangeControls'
-import GameControls from './GameControls'
 import ProgressGauge from './ProgressGauge'
 
 interface SidebarProps {
@@ -448,16 +447,7 @@ export default function Sidebar({ position }: SidebarProps) {
             </Box>
           </Paper>
 
-          {/* Game Controls */}
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: 1,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <GameControls />
-          </Box>
+          {/* ゲームコントロールはuseGameEngineで処理 */}
         </Box>
 
         {/* 右列 */}
