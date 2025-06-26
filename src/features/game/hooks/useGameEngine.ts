@@ -27,6 +27,11 @@ import {
   updateGameTime,
   updateLevelGaugeProgress
 } from '@/store/slices/gameSlice'
+import { 
+  updateSessionStats, 
+  startNewGame,
+  loadAchievementsFromStorage 
+} from '@/store/slices/achievementSlice'
 import { GameField } from '../utils/gameField'
 import { useKeyboardInput } from './useKeyboardInput'
 
@@ -53,6 +58,20 @@ export const useGameEngine = () => {
   useEffect(() => {
     if (!gameFieldRef.current) {
       gameFieldRef.current = new GameField()
+    }
+    
+    // アチーブメント初期化（localStorage から復元）
+    const savedAchievements = localStorage.getItem('tetris-achievements')
+    const savedGlobalStats = localStorage.getItem('tetris-global-stats')
+    
+    if (savedAchievements && savedGlobalStats) {
+      try {
+        const achievements = JSON.parse(savedAchievements)
+        const globalStats = JSON.parse(savedGlobalStats)
+        dispatchRef.current(loadAchievementsFromStorage({ achievements, globalStats }))
+      } catch (error) {
+        console.warn('Failed to load achievements from storage:', error)
+      }
     }
   }, [])
 
@@ -146,6 +165,16 @@ export const useGameEngine = () => {
           
           dispatchRef.current(updateScore(finalScore))
           dispatchRef.current(placeTetromino())
+          
+          // アチーブメント統計を更新
+          dispatchRef.current(updateSessionStats({
+            linesCleared: currentGameState.lines + clearedLinesCount,
+            score: currentGameState.score + finalScore,
+            blocksPlaced: currentGameState.blocksPlaced + 1,
+            tetrisCount: clearedLinesCount === 4 ? currentGameState.tetrisCount + 1 : currentGameState.tetrisCount,
+            level: currentGameState.level,
+            playTime: localGameTimeRef.current
+          }))
         }
       }
     }
@@ -184,6 +213,9 @@ export const useGameEngine = () => {
       
       // Reduxの状態をリセット
       dispatchRef.current(resetGame())
+      
+      // アチーブメントの新しいゲーム開始を通知
+      dispatchRef.current(startNewGame())
       
       // ゲームフィールドをリセット
       gameFieldRef.current.reset()
@@ -248,6 +280,16 @@ export const useGameEngine = () => {
     }
     // レベルゲージタイマーを停止
     stopLevelGaugeTimer()
+    
+    // 最終スコアでアチーブメント統計を更新
+    const currentGameState = store.getState().game
+    dispatchRef.current(updateSessionStats({
+      score: currentGameState.score,
+      linesCleared: currentGameState.lines,
+      level: currentGameState.level,
+      playTime: localGameTimeRef.current
+    }))
+    
     dispatchRef.current(endGame())
     // ゲーム終了時にlocalStorageをクリア
     localStorage.removeItem('tetris-game-state')
@@ -259,18 +301,32 @@ export const useGameEngine = () => {
       const result = gameFieldRef.current.moveTetromino(-1, 0)
       if (result) {
         dispatchRef.current(moveTetromino({ dx: -1, dy: 0 }))
+        
+        // ブロック設置統計を更新
+        if (result.tetrominoLocked) {
+          dispatchRef.current(updateSessionStats({
+            blocksPlaced: gameState.blocksPlaced + 1
+          }))
+        }
       }
     }
-  }, [gameState.isGameRunning])
+  }, [gameState.isGameRunning, gameState.blocksPlaced])
 
   const handleMoveRight = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
       const result = gameFieldRef.current.moveTetromino(1, 0)
       if (result) {
         dispatchRef.current(moveTetromino({ dx: 1, dy: 0 }))
+        
+        // ブロック設置統計を更新
+        if (result.tetrominoLocked) {
+          dispatchRef.current(updateSessionStats({
+            blocksPlaced: gameState.blocksPlaced + 1
+          }))
+        }
       }
     }
-  }, [gameState.isGameRunning])
+  }, [gameState.isGameRunning, gameState.blocksPlaced])
 
   const handleSoftDrop = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
@@ -278,18 +334,25 @@ export const useGameEngine = () => {
       if (result) {
         dispatchRef.current(moveTetromino({ dx: 0, dy: 1 }))
         
-        // ソフトドロップポイント（既存のポイントシステムと連携）
-        if (result.isSoftDrop) {
-          // ポイント計算は既存のmoveTetrominoアクションで処理
+        // ブロック設置統計を更新
+        if (result.tetrominoLocked) {
+          dispatchRef.current(updateSessionStats({
+            blocksPlaced: gameState.blocksPlaced + 1
+          }))
         }
       }
     }
-  }, [gameState.isGameRunning])
+  }, [gameState.isGameRunning, gameState.blocksPlaced])
 
   const handleHardDrop = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
       gameFieldRef.current.hardDrop()
       dispatchRef.current(hardDropTetromino())
+      
+      // ブロック設置統計を更新
+      dispatchRef.current(updateSessionStats({
+        blocksPlaced: gameState.blocksPlaced + 1
+      }))
       
       // ハードドロップ完了後のライン消去チェック
       const clearedLines = gameFieldRef.current.getCompletedLines()
@@ -297,9 +360,16 @@ export const useGameEngine = () => {
         const baseScore = [0, 100, 400, 1000, 2000][clearedLines.length] || 0
         const finalScore = baseScore * gameState.level
         dispatchRef.current(updateScore(finalScore))
+        
+        // アチーブメント統計を更新
+        dispatchRef.current(updateSessionStats({
+          linesCleared: gameState.lines + clearedLines.length,
+          score: gameState.score + finalScore,
+          tetrisCount: clearedLines.length === 4 ? gameState.tetrisCount + 1 : gameState.tetrisCount
+        }))
       }
     }
-  }, [gameState.isGameRunning, gameState.level])
+  }, [gameState.isGameRunning, gameState.level, gameState.blocksPlaced, gameState.lines, gameState.score, gameState.tetrisCount])
 
   // 回転処理
   const handleRotate = useCallback(() => {
@@ -324,21 +394,36 @@ export const useGameEngine = () => {
   const handleHold1 = useCallback(() => {
     if (gameState.isGameRunning) {
       dispatchRef.current(holdPiece({ slotIndex: 0 }))
+      
+      // ホールド使用統計を更新
+      dispatchRef.current(updateSessionStats({
+        holdCount: gameState.holdCount + 1
+      }))
     }
-  }, [gameState.isGameRunning])
+  }, [gameState.isGameRunning, gameState.holdCount])
 
   const handleHold2 = useCallback(() => {
     if (gameState.isGameRunning) {
       dispatchRef.current(holdPiece({ slotIndex: 1 }))
+      
+      // ホールド使用統計を更新
+      dispatchRef.current(updateSessionStats({
+        holdCount: gameState.holdCount + 1
+      }))
     }
-  }, [gameState.isGameRunning])
+  }, [gameState.isGameRunning, gameState.holdCount])
 
   // エクスチェンジ処理
   const handleExchange = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
       dispatchRef.current(exchangePiece())
+      
+      // エクスチェンジ使用統計を更新
+      dispatchRef.current(updateSessionStats({
+        exchangeCount: gameState.exchangeCount + 1
+      }))
     }
-  }, [gameState.isGameRunning])
+  }, [gameState.isGameRunning, gameState.exchangeCount])
 
   // キーボード入力設定
   useKeyboardInput({

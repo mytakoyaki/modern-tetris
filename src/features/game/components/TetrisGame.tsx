@@ -10,6 +10,7 @@ import { Box, Button, Typography } from '@mui/material'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store/store'
 import { useGameEngine } from '../hooks/useGameEngine'
+import { AchievementNotification, useAchievementPersistence } from '@/features/achievement'
 import GameContainer from './GameContainer'
 import FeverModeEffects from './FeverModeEffects'
 import FeverScoreEffect from './FeverScoreEffect'
@@ -19,6 +20,9 @@ export default function TetrisGame() {
   const { isGameRunning, isGameOver, score } = useSelector((state: RootState) => state.game)
   const gameEngine = useGameEngine()
   const { startGame } = gameEngine
+  
+  // アチーブメント永続化フック
+  useAchievementPersistence()
 
   // ゲーム開始画面
   const renderStartScreen = () => (
@@ -109,6 +113,7 @@ export default function TetrisGame() {
       <DangerModeEffects />
       <FeverModeEffects />
       <FeverScoreEffect />
+      <AchievementNotification />
       {isGameOver && renderGameOverScreen()}
     </>
   )
