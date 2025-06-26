@@ -107,7 +107,7 @@ const initialState: GameState = {
   field: Array(20).fill(null).map(() => Array(10).fill(null)),
   currentPiece: {
     type: null,
-    x: 4,
+    x: 3,
     y: 0,
     rotation: 0
   },
@@ -198,7 +198,7 @@ export const gameSlice = createSlice({
         state.isGameOver = true
         state.currentPiece = {
           type: null,
-          x: 4,
+          x: 3,
           y: 0,
           rotation: 0
         }
@@ -207,7 +207,7 @@ export const gameSlice = createSlice({
       
       state.currentPiece = {
         type: action.payload.type,
-        x: action.payload.x ?? 4,
+        x: action.payload.x ?? 3,
         y: action.payload.y ?? 0,
         rotation: 0
       }
@@ -372,7 +372,7 @@ export const gameSlice = createSlice({
         // 現在のピースをクリア
         state.currentPiece = {
           type: null,
-          x: 4,
+          x: 3,
           y: 0,
           rotation: 0
         }

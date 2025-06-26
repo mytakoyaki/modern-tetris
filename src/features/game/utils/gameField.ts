@@ -481,19 +481,16 @@ export class GameField {
    */
   getNextPieces(count: number = 5): TetrominoType[] {
     const nextPieces: TetrominoType[] = []
-    
     // 次のテトリミノが設定されている場合、それを最初に追加
     if (this.nextTetromino) {
       nextPieces.push(this.nextTetromino.type)
-      count-- // 既に1つ追加したのでカウントを減らす
+      count--
     }
-    
     // 足りない分をバッグから予測取得
     if (count > 0) {
       const peekedPieces = this.tetrominoBag.peek(count)
       nextPieces.push(...peekedPieces)
     }
-    
     return nextPieces
   }
 
@@ -505,20 +502,9 @@ export class GameField {
   }
 
   /**
-   * 先読み用：次のN個のテトリミノを取得
+   * 現在の落下インターバル（ms）を取得
    */
-  getNextPieces(count: number): TetrominoType[] {
-    const result: TetrominoType[] = []
-    
-    if (this.nextTetromino) {
-      result.push(this.nextTetromino.type)
-    }
-    
-    if (count > 1) {
-      const additionalPieces = this.tetrominoBag.peek(count - 1)
-      result.push(...additionalPieces)
-    }
-    
-    return result.slice(0, count)
+  public getDropInterval(): number {
+    return this.dropInterval
   }
 }

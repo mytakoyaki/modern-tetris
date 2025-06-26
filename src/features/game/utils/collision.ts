@@ -131,7 +131,7 @@ export function getCompletedLines(field: number[][]): number[] {
   const completedLines: number[] = []
   
   for (let y = 0; y < GRID_HEIGHT; y++) {
-    const isComplete = field[y].every(cell => cell !== 0)
+    const isComplete = field[y].every(cell => cell !== null && cell !== 0)
     if (isComplete) {
       completedLines.push(y)
     }
@@ -175,7 +175,7 @@ export function clearLines(field: number[][], completedLines: number[]): number[
   
   // 削除した分だけ上に空のラインを追加
   for (let i = 0; i < completedLines.length; i++) {
-    newField.unshift(Array(GRID_WIDTH).fill(0))
+    newField.unshift(Array(GRID_WIDTH).fill(null))
   }
   
   return newField
@@ -193,6 +193,6 @@ export function isGameOver(tetromino: Tetromino, field: number[][]): boolean {
  * スポーン位置での衝突チェック（ゲームオーバー用）
  */
 export function canSpawnTetromino(type: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L', field: number[][]): boolean {
-  const tetromino = new Tetromino(type, 4, 0) // 標準スポーン位置
+  const tetromino = new Tetromino(type, 3, 0) // 標準スポーン位置（Tetrominoコンストラクタのデフォルトと同じ）
   return !isGameOver(tetromino, field)
 }
