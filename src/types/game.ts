@@ -57,6 +57,9 @@ export const TETROMINO_TYPES: Record<TetrominoType, TetrominoShape> = {
     color: '#ffd700',
     className: 'tetromino-O',
     rotations: [
+      [[0,1,1,0], [0,1,1,0], [0,0,0,0], [0,0,0,0]],
+      [[0,1,1,0], [0,1,1,0], [0,0,0,0], [0,0,0,0]],
+      [[0,1,1,0], [0,1,1,0], [0,0,0,0], [0,0,0,0]],
       [[0,1,1,0], [0,1,1,0], [0,0,0,0], [0,0,0,0]]
     ]
   },

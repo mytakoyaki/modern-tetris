@@ -42,6 +42,7 @@ export class GameField {
   // ドロップ距離追跡
   public softDropDistance: number
   public hardDropDistance: number
+  private justHardDropped: boolean
   
   // T-spin判定用
   public lastActionWasRotation: boolean
@@ -274,6 +275,34 @@ export class GameField {
    */
   resetUsedHoldSlots(): void {
     this.usedHoldSlots.clear()
+  }
+
+  /**
+   * エクスチェンジ機能
+   */
+  exchangeTetromino(): TetrominoType | null {
+    if (!this.currentTetromino) {
+      return null
+    }
+
+    // 交換可能なピースのリストを作成
+    const availablePieces: TetrominoType[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L']
+    const currentPieceType = this.currentTetromino.type
+    const filteredPieces = availablePieces.filter(p => p !== currentPieceType)
+
+    // 新しいピースをランダムに選択
+    const newPieceType = filteredPieces[Math.floor(Math.random() * filteredPieces.length)]
+    
+    // 新しいテトリミノを生成（初期位置）
+    this.currentTetromino = new Tetromino(newPieceType)
+    
+    // ロック状態リセット
+    this.isLocking = false
+    this.lockTimer = 0
+    this.lockResetCount = 0
+    this.lastActionWasRotation = false
+
+    return newPieceType
   }
 
   /**
@@ -517,5 +546,19 @@ export class GameField {
    */
   public getDropInterval(): number {
     return this.dropInterval
+  }
+
+  /**
+   * 現在のテトリミノを設定（ホールド・エクスチェンジ用）
+   */
+  public setCurrentTetromino(type: TetrominoType, x: number, y: number, rotation: number): void {
+    this.currentTetromino = new Tetromino(type, x, y)
+    this.currentTetromino.setRotation(rotation)
+    
+    // ロック状態をリセット
+    this.isLocking = false
+    this.lockTimer = 0
+    
+    console.log('[DEBUG] GameField.setCurrentTetromino called:', { type, x, y, rotation })
   }
 }

@@ -1,15 +1,118 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Tetromino } from '@/features/game/utils/tetromino'
-import { 
-  canMoveTetromino, 
-  canRotateTetromino, 
-  placeTetromino as placeTetrominoOnField, 
-  getCompletedLines, 
-  clearLines,
-  canSpawnTetromino 
-} from '@/features/game/utils/collision'
+import { TETROMINO_TYPES } from '@/types/game'
+
+// Redux専用のゲームロジックユーティリティ
+function getTetrominoBlocks(piece: {type: string, x: number, y: number, rotation: number}): {x: number, y: number}[] {
+  if (!piece.type || !TETROMINO_TYPES[piece.type as keyof typeof TETROMINO_TYPES]) {
+    return []
+  }
+  
+  const tetrominoType = TETROMINO_TYPES[piece.type as keyof typeof TETROMINO_TYPES]
+  if (!tetrominoType || !tetrominoType.rotations || !tetrominoType.rotations[piece.rotation]) {
+    return []
+  }
+  
+  const shape = tetrominoType.rotations[piece.rotation]
+  const blocks: {x: number, y: number}[] = []
+  
+  for (let row = 0; row < shape.length; row++) {
+    for (let col = 0; col < shape[row].length; col++) {
+      if (shape[row][col]) {
+        blocks.push({
+          x: piece.x + col,
+          y: piece.y + row
+        })
+      }
+    }
+  }
+  
+  return blocks
+}
+
+function canPlacePiece(field: (number | null)[][], piece: {type: string, x: number, y: number, rotation: number}): boolean {
+  const blocks = getTetrominoBlocks(piece)
+  
+  for (const block of blocks) {
+    // 境界チェック
+    if (block.x < 0 || block.x >= 10 || block.y >= 20) {
+      return false
+    }
+    
+    // フィールドとの衝突チェック（y < 0は上部なので許可）
+    if (block.y >= 0 && field[block.y] && field[block.y][block.x] !== null) {
+      return false
+    }
+  }
+  
+  return true
+}
+
+function generateFieldWithPiece(field: (number | null)[][], piece: {type: string, x: number, y: number, rotation: number}): (number | null)[][] {
+  // フィールドをコピー
+  const newField = field.map(row => [...row])
+  
+  if (!piece.type) return newField
+  
+  const blocks = getTetrominoBlocks(piece)
+  const pieceTypeNumber = Object.keys(TETROMINO_TYPES).indexOf(piece.type) + 1
+  
+  for (const block of blocks) {
+    if (block.y >= 0 && block.y < 20 && block.x >= 0 && block.x < 10) {
+      newField[block.y][block.x] = pieceTypeNumber
+    }
+  }
+  
+  return newField
+}
+
+function placePieceOnField(field: (number | null)[][], piece: {type: string, x: number, y: number, rotation: number}): (number | null)[][] {
+  if (!piece.type) return field
+  
+  const newField = field.map(row => [...row])
+  const blocks = getTetrominoBlocks(piece)
+  const pieceTypeNumber = Object.keys(TETROMINO_TYPES).indexOf(piece.type) + 1
+  
+  for (const block of blocks) {
+    if (block.y >= 0 && block.y < 20 && block.x >= 0 && block.x < 10) {
+      newField[block.y][block.x] = pieceTypeNumber
+    }
+  }
+  
+  return newField
+}
+
+function findCompletedLines(field: (number | null)[][]): number[] {
+  const completedLines: number[] = []
+  
+  for (let y = 0; y < field.length; y++) {
+    if (field[y].every(cell => cell !== null)) {
+      completedLines.push(y)
+    }
+  }
+  
+  return completedLines
+}
+
+function clearCompletedLines(field: (number | null)[][], linesToClear: number[]): (number | null)[][] {
+  if (linesToClear.length === 0) return field
+  
+  // ラインを削除
+  const newField = field.filter((_, index) => !linesToClear.includes(index))
+  
+  // 上部に空行を追加
+  while (newField.length < 20) {
+    newField.unshift(Array(10).fill(null))
+  }
+  
+  return newField
+}
+
+function generateRandomPiece(): 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L' {
+  const pieces: ('I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L')[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L']
+  return pieces[Math.floor(Math.random() * pieces.length)]
+}
 import { detectSpin, isBackToBackEligible } from '@/features/game/utils/spinDetection'
-import { attemptSRSRotation } from '@/features/game/utils/srs'
 import type { SpinResult } from '@/types/spin'
 import type { PointsState, PointsGained, ExchangeResult } from '@/types/points'
 import { POINTS_CONFIG, EXCHANGE_COSTS, FEVER_CONFIG } from '@/types/points'
@@ -32,7 +135,7 @@ import {
 } from '@/features/game/utils/rankSystem'
 
 export interface GameState {
-  // Game field (10x20 grid)
+  // Game field (10x20 grid) - 配置済みブロックのみ
   field: (number | null)[][]
   
   // Current piece
@@ -104,6 +207,13 @@ export interface GameState {
   
   // Layout preference
   layoutOrientation: 'horizontal' | 'vertical'
+  
+  // Automatic falling system
+  dropTimer: number
+  dropInterval: number
+  lockTimer: number
+  lockDelay: number
+  isLocking: boolean
 }
 
 const initialState: GameState = {
@@ -150,7 +260,14 @@ const initialState: GameState = {
     isPromoted: false
   },
   recentPromotions: [],
-  layoutOrientation: 'horizontal'
+  layoutOrientation: 'horizontal',
+  
+  // Automatic falling system
+  dropTimer: 0,
+  dropInterval: 1000, // 1秒間隔（レベル1）
+  lockTimer: 0,
+  lockDelay: 500, // 0.5秒のロック遅延
+  isLocking: false
 }
 
 export const gameSlice = createSlice({
@@ -199,7 +316,14 @@ export const gameSlice = createSlice({
       if (!state.isGameRunning) return
       
       // ゲームオーバー判定
-      if (!canSpawnTetromino(action.payload.type, state.field)) {
+      const testPiece = {
+        type: action.payload.type,
+        x: action.payload.x ?? 3,
+        y: action.payload.y ?? 0,
+        rotation: 0
+      }
+      
+      if (!canPlacePiece(state.field, testPiece)) {
         state.isGameRunning = false
         state.isGameOver = true
         state.currentPiece = {
@@ -219,13 +343,24 @@ export const gameSlice = createSlice({
       }
     },
     moveTetromino: (state, action: PayloadAction<{dx: number, dy: number}>) => {
+      // currentPiece.typeがnullの場合は何もしない
       if (state.currentPiece.type) {
-        const tetromino = Tetromino.fromData(state.currentPiece)
+        const testPiece = {
+          ...state.currentPiece,
+          x: state.currentPiece.x + action.payload.dx,
+          y: state.currentPiece.y + action.payload.dy
+        }
         
-        if (canMoveTetromino(tetromino, action.payload.dx, action.payload.dy, state.field)) {
-          state.currentPiece.x += action.payload.dx
-          state.currentPiece.y += action.payload.dy
+        if (canPlacePiece(state.field, testPiece)) {
+          state.currentPiece.x = testPiece.x
+          state.currentPiece.y = testPiece.y
           state.lastAction = action.payload.dy > 0 ? 'drop' : 'move'
+          
+          // 落下に関する状態リセット
+          if (action.payload.dy > 0 || action.payload.dx !== 0) {
+            state.isLocking = false
+            state.lockTimer = 0
+          }
           
           // ソフトドロップポイント（下方向の移動時）
           if (action.payload.dy > 0) {
@@ -233,55 +368,107 @@ export const gameSlice = createSlice({
             state.pointSystem.totalPoints += pointsGained.total
             state.pointSystem.lastDropBonus = pointsGained.total
             state.recentPointsGained.push(pointsGained)
-            console.log('[DEBUG] Soft drop points awarded:', pointsGained.total, 'for distance:', action.payload.dy)
           }
         }
       }
     },
-    rotateTetromino: (state) => {
+    rotateTetromino: (state, action: PayloadAction<{clockwise?: boolean}> = {payload: {}}) => {
+      // currentPiece.typeがnullの場合は何もしない
       if (state.currentPiece.type) {
-        const tetromino = Tetromino.fromData(state.currentPiece)
+        const clockwise = action.payload.clockwise ?? true
+        const newRotation = clockwise 
+          ? (state.currentPiece.rotation + 1) % 4
+          : (state.currentPiece.rotation + 3) % 4
         
-        // SRS回転試行
-        const rotationResult = attemptSRSRotation(tetromino, state.field, true)
+        const testPiece = {
+          ...state.currentPiece,
+          rotation: newRotation
+        }
         
-        if (rotationResult.success) {
-          state.currentPiece.x = rotationResult.newX
-          state.currentPiece.y = rotationResult.newY
-          state.currentPiece.rotation = rotationResult.newRotation
+        // 基本回転チェック
+        if (canPlacePiece(state.field, testPiece)) {
+          state.currentPiece.rotation = newRotation
           state.lastAction = 'rotate'
+          state.isLocking = false
+          state.lockTimer = 0
           
-          // SRS情報を記録（スピン検出用）
+          // 基本回転成功
           state.lastRotationKick = {
-            wasWallKick: rotationResult.wallKickUsed,
-            kickIndex: rotationResult.kickIndex
+            wasWallKick: false,
+            kickIndex: 0
+          }
+        } else {
+          // SRS Wall Kick試行（簡略版）
+          const wallKickOffsets = [
+            [{x: -1, y: 0}, {x: -1, y: -1}, {x: 0, y: 2}, {x: -1, y: 2}],
+            [{x: 1, y: 0}, {x: 1, y: -1}, {x: 0, y: 2}, {x: 1, y: 2}],
+            [{x: 1, y: 0}, {x: 1, y: 1}, {x: 0, y: -2}, {x: 1, y: -2}],
+            [{x: -1, y: 0}, {x: -1, y: 1}, {x: 0, y: -2}, {x: -1, y: -2}]
+          ]
+          
+          const kickTable = wallKickOffsets[state.currentPiece.rotation]
+          let rotationSuccess = false
+          
+          for (let i = 0; i < kickTable.length; i++) {
+            const offset = kickTable[i]
+            const kickTestPiece = {
+              ...testPiece,
+              x: testPiece.x + offset.x,
+              y: testPiece.y + offset.y
+            }
+            
+            if (canPlacePiece(state.field, kickTestPiece)) {
+              state.currentPiece.x = kickTestPiece.x
+              state.currentPiece.y = kickTestPiece.y
+              state.currentPiece.rotation = newRotation
+              state.lastAction = 'rotate'
+              state.isLocking = false
+              state.lockTimer = 0
+              
+              // Wall kick成功
+              state.lastRotationKick = {
+                wasWallKick: true,
+                kickIndex: i + 1
+              }
+              rotationSuccess = true
+              break
+            }
+          }
+          
+          if (!rotationSuccess) {
+            // 回転失敗
+            state.lastRotationKick = null
           }
         }
       }
     },
     hardDropTetromino: (state, action: PayloadAction<{distance?: number}>) => {
-      // GameFieldからの距離が提供された場合はそれを使用、そうでなければ計算
+      // currentPiece.typeがnullの場合は何もしない（ポイント稼ぎ防止）
+      if (!state.currentPiece.type) return
+      
       let dropDistance = action.payload?.distance || 0
       
-      if (dropDistance === 0 && state.currentPiece.type) {
-        // Fallback: Redux側で計算（GameFieldと同期しない場合の対応）
-        const tetromino = Tetromino.fromData(state.currentPiece)
-        const initialY = tetromino.y
+      if (dropDistance === 0) {
+        // Redux側でハードドロップ距離を計算
+        const initialY = state.currentPiece.y
+        let testY = initialY
         
-        // 着地するまで下に移動
-        while (canMoveTetromino(tetromino, 0, 1, state.field)) {
-          tetromino.moveDown()
-          state.currentPiece.y = tetromino.y
+        // 着地位置まで下に移動
+        while (true) {
+          const testPiece = {
+            ...state.currentPiece,
+            y: testY + 1
+          }
+          
+          if (!canPlacePiece(state.field, testPiece)) {
+            break
+          }
+          testY++
         }
         
-        dropDistance = state.currentPiece.y - initialY
+        dropDistance = testY - initialY
+        state.currentPiece.y = testY
       }
-      
-      console.log('[DEBUG] Hard drop distance calculation:', {
-        providedDistance: action.payload?.distance,
-        calculatedDistance: dropDistance,
-        finalDistance: dropDistance
-      })
       
       // ハードドロップポイント計算
       if (dropDistance > 0) {
@@ -289,19 +476,13 @@ export const gameSlice = createSlice({
         state.pointSystem.totalPoints += pointsGained.total
         state.pointSystem.lastDropBonus = pointsGained.total
         state.recentPointsGained.push(pointsGained)
-        console.log('[DEBUG] Hard drop points awarded:', pointsGained.total, 'for distance:', dropDistance)
       }
+      
+      // ハードドロップ後は即座にロック
+      state.isLocking = false
+      state.lockTimer = state.lockDelay // 即座にロック
     },
     placeTetromino: (state) => {
-      console.log('[DEBUG] placeTetromino reducer called, blocksPlaced BEFORE:', state.blocksPlaced)
-      console.log('[DEBUG] placeTetromino reducer - currentPiece:', state.currentPiece)
-      
-      // currentPiece.typeのチェックを削除し、常にブロック設置処理を実行
-      console.log('[DEBUG] placeTetromino - proceeding without currentPiece.type check...')
-      
-      // フィールド操作は既にGameFieldで処理済みなのでスキップ
-      // ライン消去処理もGameEngineで処理済みなのでスキップして、直接統計更新に進む
-      
       // 基本設置ポイント
       const placementPoints = calculatePointsGained('placement', 1)
       state.pointSystem.totalPoints += placementPoints.total
@@ -314,19 +495,14 @@ export const gameSlice = createSlice({
       state.blocksPlaced += 1
       
       // フィーバーモードチェック
-      console.log('[DEBUG] Fever mode check - blocksPlaced AFTER increment:', state.blocksPlaced, 'BLOCKS_NEEDED:', FEVER_CONFIG.BLOCKS_NEEDED)
       if (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED === 0) {
-        console.log('[DEBUG] Fever mode ACTIVATED!')
         state.feverMode.isActive = true
         state.feverMode.timeRemaining = FEVER_CONFIG.DURATION
         state.feverMode.blocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED
       } else {
         const newBlocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED - (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED)
-        console.log('[DEBUG] Fever mode update - blocksUntilActivation:', newBlocksUntilActivation)
         state.feverMode.blocksUntilActivation = newBlocksUntilActivation
       }
-      
-      console.log('[DEBUG] placeTetromino - after fever mode update, blocksPlaced:', state.blocksPlaced, 'blocksUntilActivation:', state.feverMode.blocksUntilActivation)
       
       // ホールドを再度可能にする
       state.canHold = true
@@ -334,6 +510,74 @@ export const gameSlice = createSlice({
     },
     updateField: (state, action: PayloadAction<(number | null)[][]>) => {
       state.field = action.payload
+    },
+    updateCurrentPiece: (state, action: PayloadAction<{type: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L' | null, x: number, y: number, rotation: number}>) => {
+      state.currentPiece = action.payload
+    },
+    lockTetromino: (state) => {
+      if (!state.currentPiece.type) return
+      
+      // フィールドにテトリミノを配置
+      const newField = placePieceOnField(state.field, state.currentPiece)
+      state.field = newField
+      
+      // 完成ラインをチェック
+      const completedLines = findCompletedLines(newField)
+      if (completedLines.length > 0) {
+        // ラインクリア
+        state.field = clearCompletedLines(newField, completedLines)
+        state.lines += completedLines.length
+        
+        // スコア計算（フィーバーモード考慮）
+        const baseScore = [0, 100, 400, 1000, 2000][completedLines.length] || 0
+        const multiplier = state.feverMode.isActive ? 4 : 1
+        const finalScore = baseScore * state.level * multiplier
+        state.score += finalScore
+      }
+      
+      // ロック状態リセット
+      state.isLocking = false
+      state.lockTimer = 0
+      
+      // spawnNextTetromino アクションを呼び出す準備
+      // このアクションは別途呼び出される必要がある
+    },
+    spawnNextTetromino: (state) => {
+      // 次のピースから新しいテトリミノをスポーン
+      if (state.nextPieces.length === 0) {
+        // 次のピースがない場合、ランダム生成
+        const newPiece = generateRandomPiece()
+        state.currentPiece = {
+          type: newPiece,
+          x: 3,
+          y: 0,
+          rotation: 0
+        }
+      } else {
+        // 次のピースを使用
+        const nextPiece = state.nextPieces.shift()!
+        state.currentPiece = {
+          type: nextPiece,
+          x: 3,
+          y: 0,
+          rotation: 0
+        }
+        
+        // 新しいピースをnextPiecesに追加
+        state.nextPieces.push(generateRandomPiece())
+      }
+      
+      // スポーン位置でゲームオーバーチェック
+      if (!canPlacePiece(state.field, state.currentPiece)) {
+        state.isGameOver = true
+        state.isGameRunning = false
+        state.currentPiece = {
+          type: null,
+          x: 3,
+          y: 0,
+          rotation: 0
+        }
+      }
     },
     toggleLayoutOrientation: (state) => {
       state.layoutOrientation = state.layoutOrientation === 'horizontal' ? 'vertical' : 'horizontal'
@@ -358,92 +602,227 @@ export const gameSlice = createSlice({
     updateLevelGaugeProgress: (state, action: PayloadAction<number>) => {
       state.levelGaugeProgress = action.payload
     },
+    updateDropInterval: (state, action: PayloadAction<number>) => {
+      state.dropInterval = action.payload
+    },
+    updateDropTimer: (state, action: PayloadAction<number>) => {
+      state.dropTimer += action.payload
+      
+      // 自動落下チェック
+      if (state.dropTimer >= state.dropInterval) {
+        state.dropTimer = 0
+        
+        // テトリミノを1行下に移動を試行
+        if (state.currentPiece.type) {
+          const testPiece = {
+            ...state.currentPiece,
+            y: state.currentPiece.y + 1
+          }
+          
+          const canMoveDown = canPlacePiece(state.field, testPiece)
+          
+          if (canMoveDown) {
+            state.currentPiece.y += 1
+            state.isLocking = false
+            state.lockTimer = 0
+            
+            // ソフトドロップポイント
+            const pointsGained = calculatePointsGained('soft-drop', 1)
+            state.pointSystem.totalPoints += pointsGained.total
+            state.pointSystem.lastDropBonus = pointsGained.total
+            state.recentPointsGained.push(pointsGained)
+          } else {
+            // 下に移動できない場合、ロック処理開始
+            if (!state.isLocking) {
+              state.isLocking = true
+              state.lockTimer = 0
+            }
+          }
+        }
+      }
+      
+      // ロックタイマー更新
+      if (state.isLocking) {
+        state.lockTimer += action.payload
+        if (state.lockTimer >= state.lockDelay) {
+          // テトリミノを自動ロック
+          if (state.currentPiece.type) {
+            // placeTetromino を呼び出して統計を更新
+            const placementPoints = calculatePointsGained('placement', 1)
+            state.pointSystem.totalPoints += placementPoints.total
+            state.recentPointsGained.push(placementPoints)
+            
+            // エクスチェンジカウントリセット
+            state.pointSystem.exchangeCount = resetExchangeCount()
+            
+            // 統計更新
+            state.blocksPlaced += 1
+            
+            // フィーバーモードチェック
+            if (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED === 0) {
+              state.feverMode.isActive = true
+              state.feverMode.timeRemaining = FEVER_CONFIG.DURATION
+              state.feverMode.blocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED
+            } else {
+              const newBlocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED - (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED)
+              state.feverMode.blocksUntilActivation = newBlocksUntilActivation
+            }
+            
+            // ホールドを再度可能にする
+            state.canHold = true
+            state.usedHoldSlots = []
+            
+            // フィールドにテトリミノを配置
+            const newField = placePieceOnField(state.field, state.currentPiece)
+            state.field = newField
+            
+            // 完成ラインをチェック
+            const completedLines = findCompletedLines(newField)
+            if (completedLines.length > 0) {
+              // ラインクリア
+              state.field = clearCompletedLines(newField, completedLines)
+              state.lines += completedLines.length
+              
+              // スコア計算（フィーバーモード考慮）
+              const baseScore = [0, 100, 400, 1000, 2000][completedLines.length] || 0
+              const multiplier = state.feverMode.isActive ? 4 : 1
+              const finalScore = baseScore * state.level * multiplier
+              state.score += finalScore
+            }
+            
+            // ロック状態リセット
+            state.isLocking = false
+            state.lockTimer = 0
+            
+            // 新しいテトリミノを即座にスポーン（nullタイミングを排除）
+            if (state.nextPieces.length === 0) {
+              // 次のピースがない場合、ランダム生成
+              state.nextPieces.push(generateRandomPiece())
+            }
+            
+            const nextPiece = state.nextPieces.shift()!
+            state.currentPiece = {
+              type: nextPiece,
+              x: 3,
+              y: 0,
+              rotation: 0
+            }
+            
+            // 新しいピースをnextPiecesに追加
+            state.nextPieces.push(generateRandomPiece())
+            
+            // スポーン位置でゲームオーバーチェック
+            if (!canPlacePiece(state.field, state.currentPiece)) {
+              state.isGameOver = true
+              state.isGameRunning = false
+              state.currentPiece = {
+                type: null,
+                x: 3,
+                y: 0,
+                rotation: 0
+              }
+            }
+          }
+        }
+      }
+    },
     exchangePiece: (state) => {
       const exchangeResult = attemptExchange(
         state.pointSystem.totalPoints,
         state.pointSystem.exchangeCount,
         state.feverMode.isActive
-      );
+      )
 
       if (!exchangeResult.success) {
-        return; // 交換失敗時はアクションなし
+        return
       }
 
       // ポイント・カウント更新
-      state.pointSystem.totalPoints = exchangeResult.remainingPoints;
-      state.pointSystem.exchangeCount = exchangeResult.newExchangeCount;
-      state.pointSystem.nextExchangeCost = getNextExchangeCost(exchangeResult.newExchangeCount);
+      state.pointSystem.totalPoints = exchangeResult.remainingPoints
+      state.pointSystem.exchangeCount = exchangeResult.newExchangeCount
+      state.pointSystem.nextExchangeCost = getNextExchangeCost(exchangeResult.newExchangeCount)
 
       // 交換可能なピースのリストを作成
-      const availablePieces = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-      const currentPieceType = state.currentPiece.type;
-      const filteredPieces = availablePieces.filter(p => p !== currentPieceType);
+      const availablePieces = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'] as const
+      const currentPieceType = state.currentPiece.type
+      const filteredPieces = availablePieces.filter(p => p !== currentPieceType)
 
       // 新しいピースをランダムに選択
-      const newPieceType = filteredPieces[Math.floor(Math.random() * filteredPieces.length)];
-      
-      // 現在のピースの位置を保持
-      const { x, y } = state.currentPiece;
+      const newPieceType = filteredPieces[Math.floor(Math.random() * filteredPieces.length)]
 
-      // 現在のピースを新しいピースに交換
+      // 新しいピースに交換（初期位置で）
       state.currentPiece = {
         type: newPieceType,
-        x: x, // 元の位置を維持
-        y: y, // 元の位置を維持
+        x: 3, // 初期位置
+        y: 0, // 初期位置
         rotation: 0
-      };
+      }
+      
+      // 統計更新
+      state.exchangeCount += 1
     },
     holdPiece: (state, action: PayloadAction<{slotIndex: 0 | 1}>) => {
-      if (!state.canHold || state.usedHoldSlots.includes(action.payload.slotIndex)) {
+      const slotIndex = action.payload.slotIndex
+      
+      // ホールド制限チェック
+      if (!state.canHold) {
         return
       }
       
       // ホールドコストチェック
       const holdCost = getHoldCost(state.feverMode.isActive)
+      
       if (state.pointSystem.totalPoints < holdCost) {
-        return // ポイント不足の場合はホールド不可
+        return
       }
       
-      const slotIndex = action.payload.slotIndex
+      // 現在のピースタイプ
       const currentPieceType = state.currentPiece.type
+      if (!currentPieceType) {
+        return
+      }
+      
+      // ホールドコストを消費
+      state.pointSystem.totalPoints -= holdCost
+      
+      // ホールドコストの記録
+      const holdCostPoints = calculatePointsGained('hold-cost', -holdCost)
+      state.recentPointsGained.push(holdCostPoints)
+      
+      // ホールドされていたピース
       const heldPieceType = state.holdSlots[slotIndex]
       
-      if (currentPieceType) {
-        // ホールドコストを消費
-        state.pointSystem.totalPoints -= holdCost
-        
-        // ホールドコストの記録
-        const holdCostPoints = calculatePointsGained('hold-cost', holdCost)
-        state.recentPointsGained.push(holdCostPoints)
-        
-        state.holdSlots[slotIndex] = currentPieceType
-        state.usedHoldSlots.push(slotIndex)
-        state.canHold = false // 1ターンに1度だけホールド可能
+      // 現在のピースをホールドスロットに格納
+      state.holdSlots[slotIndex] = currentPieceType
+      state.usedHoldSlots.push(slotIndex)
+      state.canHold = false // 1ターンに1度だけホールド可能
 
-        if (heldPieceType) {
-          // ホールドされていたピースを現在のピースに設定
+      if (heldPieceType) {
+        // ホールドされていたピースを現在のピースに設定
+        state.currentPiece = {
+          type: heldPieceType as 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L',
+          x: 3, // 初期位置
+          y: 0, // 初期位置
+          rotation: 0
+        }
+      } else {
+        // ホールドが空の場合、次のピースを現在のピースに設定
+        const nextPiece = state.nextPieces.shift()
+        if (nextPiece) {
           state.currentPiece = {
-            type: heldPieceType as 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L',
-            x: 4, // 初期位置
-            y: 0, // 初期位置
+            type: nextPiece,
+            x: 3,
+            y: 0,
             rotation: 0
           }
         } else {
-          // ホールドが空の場合、次のピースを現在のピースに設定
-          const nextPiece = state.nextPieces.shift()
-          if (nextPiece) {
-            state.currentPiece = {
-              type: nextPiece,
-              x: 4,
-              y: 0,
-              rotation: 0
-            }
-          } else {
-            // ゲームオーバーなどのハンドリングが必要な場合
-            state.isGameOver = true
-          }
+          // ゲームオーバーなどのハンドリングが必要な場合
+          state.isGameOver = true
         }
       }
+      
+      // 統計更新
+      state.holdCount += 1
     },
     
     updateNextPieces: (state, action: PayloadAction<('I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L')[]>) => {
@@ -472,12 +851,17 @@ export const {
   hardDropTetromino,
   placeTetromino,
   updateField,
+  updateCurrentPiece,
+  lockTetromino,
+  spawnNextTetromino,
   toggleLayoutOrientation,
   activateFeverMode,
   updateFeverTime,
   updateLevel,
   updateGameTime,
   updateLevelGaugeProgress,
+  updateDropInterval,
+  updateDropTimer,
   exchangePiece,
   holdPiece,
   updateNextPieces,

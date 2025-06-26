@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { Box, Paper } from '@mui/material'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store/store'
 import { Tetromino } from '../utils/tetromino'
+import { TETROMINO_TYPES } from '@/types/game'
 import SpinDisplay from './SpinDisplay'
 
 interface GameFieldProps {
@@ -17,8 +18,9 @@ const GRID_HEIGHT = 20
 const CELL_SIZE = 32
 
 export default function GameField({ width, height }: GameFieldProps) {
-  const { field, isGameRunning } = useSelector((state: RootState) => state.game)
+  const { field, isGameRunning, currentPiece } = useSelector((state: RootState) => state.game)
   const [fieldSize, setFieldSize] = useState({ width: 336, height: 656 })
+  
   
   useEffect(() => {
     const calculateFieldSize = () => {
@@ -84,9 +86,57 @@ export default function GameField({ width, height }: GameFieldProps) {
     (finalWidth - 16) / GRID_WIDTH,  // パディングを考慮
     (finalHeight - 16) / GRID_HEIGHT
   )
+  
+
+  // 現在のピースを含む表示フィールドを生成
+  const displayField = useMemo(() => {
+    // ベースフィールドをコピー（配置済みブロックのみ）
+    const newField = field.map(row => [...row])
+    
+    // 現在のピースを追加
+    if (currentPiece.type) {
+      const getTetrominoBlocks = (piece: {type: string, x: number, y: number, rotation: number}) => {
+        if (!piece.type || !TETROMINO_TYPES[piece.type as keyof typeof TETROMINO_TYPES]) {
+          return []
+        }
+        
+        const tetrominoType = TETROMINO_TYPES[piece.type as keyof typeof TETROMINO_TYPES]
+        if (!tetrominoType.rotations[piece.rotation]) {
+          return []
+        }
+        
+        const shape = tetrominoType.rotations[piece.rotation]
+        const blocks: {x: number, y: number}[] = []
+        
+        for (let row = 0; row < shape.length; row++) {
+          for (let col = 0; col < shape[row].length; col++) {
+            if (shape[row][col]) {
+              blocks.push({
+                x: piece.x + col,
+                y: piece.y + row
+              })
+            }
+          }
+        }
+        
+        return blocks
+      }
+
+      const blocks = getTetrominoBlocks(currentPiece)
+      const pieceTypeNumber = Object.keys(TETROMINO_TYPES).indexOf(currentPiece.type) + 1
+      
+      for (const block of blocks) {
+        if (block.y >= 0 && block.y < GRID_HEIGHT && block.x >= 0 && block.x < GRID_WIDTH) {
+          newField[block.y][block.x] = pieceTypeNumber
+        }
+      }
+    }
+    
+    return newField
+  }, [field, currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.rotation])
 
   const renderCell = (row: number, col: number) => {
-    const cellValue = field[row][col]
+    const cellValue = displayField[row][col]
     const isEmpty = cellValue === null || cellValue === 0
     
     return (
@@ -168,7 +218,7 @@ export default function GameField({ width, height }: GameFieldProps) {
           margin: '8px' // 枠との適切な間隔を確保
         }}
       >
-        {field.map((row, rowIndex) =>
+        {displayField.map((row, rowIndex) =>
           row.map((cell, colIndex) => renderCell(rowIndex, colIndex))
         )}
       </Box>
