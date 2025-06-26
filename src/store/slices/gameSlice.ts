@@ -21,7 +21,8 @@ import {
   getNextExchangeCost, 
   attemptExchange,
   resetExchangeCount,
-  createInitialPointsState
+  createInitialPointsState,
+  getHoldCost
 } from '@/features/game/utils/pointsSystem'
 import { 
   getCurrentRank, 
@@ -447,11 +448,24 @@ export const gameSlice = createSlice({
         return
       }
       
+      // ホールドコストチェック
+      const holdCost = getHoldCost(state.feverMode.isActive)
+      if (state.pointSystem.totalPoints < holdCost) {
+        return // ポイント不足の場合はホールド不可
+      }
+      
       const slotIndex = action.payload.slotIndex
       const currentPieceType = state.currentPiece.type
       const heldPieceType = state.holdSlots[slotIndex]
       
       if (currentPieceType) {
+        // ホールドコストを消費
+        state.pointSystem.totalPoints -= holdCost
+        
+        // ホールドコストの記録
+        const holdCostPoints = calculatePointsGained('hold-cost', holdCost)
+        state.recentPointsGained.push(holdCostPoints)
+        
         state.holdSlots[slotIndex] = currentPieceType
         state.usedHoldSlots.push(slotIndex)
         state.canHold = false // 1ターンに1度だけホールド可能

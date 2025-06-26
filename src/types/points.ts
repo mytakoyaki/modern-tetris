@@ -21,7 +21,7 @@ export interface ExchangeResult {
 }
 
 export interface PointsGained {
-  source: 'placement' | 'soft-drop' | 'hard-drop' | 'achievement' | 'rank-bonus'
+  source: 'placement' | 'soft-drop' | 'hard-drop' | 'achievement' | 'rank-bonus' | 'hold-cost'
   amount: number
   multiplier?: number
   total: number
