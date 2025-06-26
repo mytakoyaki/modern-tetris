@@ -37,9 +37,40 @@ export default function TetrisGame() {
         justifyContent: 'center',
         minHeight: '100vh',
         backgroundColor: '#1a1a1a',
-        color: '#fff'
+        color: '#fff',
+        position: 'relative',
+        overflow: 'hidden'
       }}
     >
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: 0.6,
+          zIndex: 0
+        }}
+      >
+        <source src="/assets/videos/gemini_generated_video_55DF7A7E.mp4" type="video/mp4" />
+      </video>
+      
+      {/* Content overlay */}
+      <Box
+        sx={{
+          position: 'relative',
+          zIndex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}
+      >
       <Typography variant="h2" sx={{ mb: 4, color: '#00ff88' }}>
         ClaudeTetris
       </Typography>
@@ -83,6 +114,7 @@ export default function TetrisGame() {
         >
           実績確認
         </Button>
+      </Box>
       </Box>
     </Box>
   )
