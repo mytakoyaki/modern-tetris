@@ -8,15 +8,18 @@
 import React from 'react'
 import { Box, Button, Typography } from '@mui/material'
 import { useSelector } from 'react-redux'
+import { useRouter } from 'next/navigation'
 import type { RootState } from '@/store/store'
 import { useGameEngine } from '../hooks/useGameEngine'
 import { AchievementNotification, useAchievementPersistence } from '@/features/achievement'
 import GameContainer from './GameContainer'
+import GameMenu from './GameMenu'
 import FeverModeEffects from './FeverModeEffects'
 import FeverScoreEffect from './FeverScoreEffect'
 import DangerModeEffects from './DangerModeEffects'
 
 export default function TetrisGame() {
+  const router = useRouter()
   const { isGameRunning, isGameOver, score } = useSelector((state: RootState) => state.game)
   const gameEngine = useGameEngine()
   const { startGame } = gameEngine
@@ -43,23 +46,44 @@ export default function TetrisGame() {
       <Typography variant="h6" sx={{ mb: 4, color: '#666' }}>
         PCユーザー専用の革新的テトリスゲーム
       </Typography>
-      <Button
-        variant="contained"
-        size="large"
-        onClick={startGame}
-        sx={{
-          backgroundColor: '#00ff88',
-          color: '#000',
-          fontSize: '1.2rem',
-          px: 4,
-          py: 2,
-          '&:hover': {
-            backgroundColor: '#00cc6a',
-          }
-        }}
-      >
-        ゲーム開始
-      </Button>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={startGame}
+          sx={{
+            backgroundColor: '#00ff88',
+            color: '#000',
+            fontSize: '1.2rem',
+            px: 4,
+            py: 2,
+            '&:hover': {
+              backgroundColor: '#00cc6a',
+            }
+          }}
+        >
+          ゲーム開始
+        </Button>
+        
+        <Button
+          variant="outlined"
+          size="medium"
+          onClick={() => router.push('/achievements')}
+          sx={{
+            borderColor: '#ffd700',
+            color: '#ffd700',
+            fontSize: '1rem',
+            px: 3,
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(255, 215, 0, 0.1)',
+              borderColor: '#ffd700'
+            }
+          }}
+        >
+          実績確認
+        </Button>
+      </Box>
     </Box>
   )
 
@@ -86,29 +110,67 @@ export default function TetrisGame() {
       <Typography variant="h5" sx={{ mb: 4, color: '#fff' }}>
         Score: {score.toLocaleString()}
       </Typography>
-      <Button
-        variant="contained"
-        size="large"
-        onClick={startGame}
-        sx={{
-          backgroundColor: '#00ff88',
-          color: '#000',
-          fontSize: '1.2rem',
-          px: 4,
-          py: 2,
-          '&:hover': {
-            backgroundColor: '#00cc6a',
-          }
-        }}
-      >
-        もう一度プレイ
-      </Button>
+      
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={startGame}
+          sx={{
+            backgroundColor: '#00ff88',
+            color: '#000',
+            fontSize: '1.2rem',
+            px: 4,
+            py: 2,
+            '&:hover': {
+              backgroundColor: '#00cc6a',
+            }
+          }}
+        >
+          もう一度プレイ
+        </Button>
+        
+        <Button
+          variant="outlined"
+          size="medium"
+          onClick={() => router.push('/achievements')}
+          sx={{
+            borderColor: '#ffd700',
+            color: '#ffd700',
+            fontSize: '1rem',
+            px: 3,
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(255, 215, 0, 0.1)',
+              borderColor: '#ffd700'
+            }
+          }}
+        >
+          実績確認
+        </Button>
+        
+        <Button
+          variant="text"
+          size="small"
+          onClick={() => router.push('/')}
+          sx={{
+            color: '#666',
+            fontSize: '0.9rem',
+            '&:hover': {
+              color: '#888'
+            }
+          }}
+        >
+          ホームに戻る
+        </Button>
+      </Box>
     </Box>
   )
 
   // ゲーム中画面
   const renderGameScreen = () => (
     <>
+      <GameMenu />
       <GameContainer />
       <DangerModeEffects />
       <FeverModeEffects />

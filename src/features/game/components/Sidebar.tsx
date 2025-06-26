@@ -5,7 +5,6 @@ import { Box, Paper, Typography, Divider, Button } from '@mui/material'
 import { useSelector } from 'react-redux'
 import { useRouter } from 'next/navigation'
 import type { RootState } from '@/store/store'
-import { AchievementSummary } from '@/features/achievement'
 import PointsDisplay from './PointsDisplay'
 import ExchangeControls from './ExchangeControls'
 import ProgressGauge from './ProgressGauge'
@@ -461,27 +460,6 @@ export default function Sidebar({ position }: SidebarProps) {
           <Box>
         <ExchangeControls />
       </Box>
-
-          {/* Achievement Summary */}
-          <Box sx={{ mb: 2 }}>
-            <AchievementSummary />
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => router.push('/achievements')}
-              sx={{
-                mt: 1,
-                color: '#00ff88',
-                borderColor: '#00ff88',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 255, 136, 0.1)',
-                  borderColor: '#00ff88'
-                }
-              }}
-            >
-              実績を見る
-            </Button>
-          </Box>
 
           {/* Game Stats */}
           <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
