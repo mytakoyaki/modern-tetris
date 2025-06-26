@@ -233,6 +233,7 @@ export const gameSlice = createSlice({
             state.pointSystem.totalPoints += pointsGained.total
             state.pointSystem.lastDropBonus = pointsGained.total
             state.recentPointsGained.push(pointsGained)
+            console.log('[DEBUG] Soft drop points awarded:', pointsGained.total, 'for distance:', action.payload.dy)
           }
         }
       }
@@ -258,8 +259,12 @@ export const gameSlice = createSlice({
         }
       }
     },
-    hardDropTetromino: (state) => {
-      if (state.currentPiece.type) {
+    hardDropTetromino: (state, action: PayloadAction<{distance?: number}>) => {
+      // GameFieldからの距離が提供された場合はそれを使用、そうでなければ計算
+      let dropDistance = action.payload?.distance || 0
+      
+      if (dropDistance === 0 && state.currentPiece.type) {
+        // Fallback: Redux側で計算（GameFieldと同期しない場合の対応）
         const tetromino = Tetromino.fromData(state.currentPiece)
         const initialY = tetromino.y
         
@@ -269,14 +274,22 @@ export const gameSlice = createSlice({
           state.currentPiece.y = tetromino.y
         }
         
-        // ハードドロップポイント計算
-        const dropDistance = state.currentPiece.y - initialY
-        if (dropDistance > 0) {
-          const pointsGained = calculatePointsGained('hard-drop', dropDistance)
-          state.pointSystem.totalPoints += pointsGained.total
-          state.pointSystem.lastDropBonus = pointsGained.total
-          state.recentPointsGained.push(pointsGained)
-        }
+        dropDistance = state.currentPiece.y - initialY
+      }
+      
+      console.log('[DEBUG] Hard drop distance calculation:', {
+        providedDistance: action.payload?.distance,
+        calculatedDistance: dropDistance,
+        finalDistance: dropDistance
+      })
+      
+      // ハードドロップポイント計算
+      if (dropDistance > 0) {
+        const pointsGained = calculatePointsGained('hard-drop', dropDistance)
+        state.pointSystem.totalPoints += pointsGained.total
+        state.pointSystem.lastDropBonus = pointsGained.total
+        state.recentPointsGained.push(pointsGained)
+        console.log('[DEBUG] Hard drop points awarded:', pointsGained.total, 'for distance:', dropDistance)
       }
     },
     placeTetromino: (state) => {

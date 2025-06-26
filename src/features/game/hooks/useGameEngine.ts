@@ -329,23 +329,39 @@ export const useGameEngine = () => {
 
   const handleSoftDrop = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
+      console.log('[DEBUG] Soft drop input - attempting to move tetromino down')
       const result = gameFieldRef.current.moveTetromino(0, 1)
       if (result) {
+        console.log('[DEBUG] Soft drop successful - dispatching moveTetromino action')
         dispatchRef.current(moveTetromino({ dx: 0, dy: 1 }))
+      } else {
+        console.log('[DEBUG] Soft drop failed - tetromino cannot move down')
       }
     }
   }, [gameState.isGameRunning])
 
   const handleHardDrop = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
-      console.log('[DEBUG] Hard drop executed - dispatching placeTetromino')
+      console.log('[DEBUG] Hard drop initiated')
+      console.log('[DEBUG] Current piece position before hard drop:', {
+        x: gameState.currentPiece.x,
+        y: gameState.currentPiece.y,
+        type: gameState.currentPiece.type
+      })
       console.log('[DEBUG] Current blocksPlaced before hard drop:', gameState.blocksPlaced)
       console.log('[DEBUG] Current feverMode state before hard drop:', gameState.feverMode)
       
-      gameFieldRef.current.hardDrop()
-      dispatchRef.current(hardDropTetromino())
+      // Step 1: Execute hard drop in GameField
+      console.log('[DEBUG] Step 1: Executing gameField.hardDrop()')
+      const hardDropDistance = gameFieldRef.current.hardDrop()
+      console.log('[DEBUG] GameField returned hard drop distance:', hardDropDistance)
       
-      // ハードドロップ時は常にplaceTetromino()を呼び出し（フィーバーモード更新のため）
+      // Step 2: Dispatch hardDropTetromino action (calculates points)
+      console.log('[DEBUG] Step 2: Dispatching hardDropTetromino action with distance:', hardDropDistance)
+      dispatchRef.current(hardDropTetromino({ distance: hardDropDistance }))
+      
+      // Step 3: Dispatch placeTetromino action (handles block placement and fever mode)
+      console.log('[DEBUG] Step 3: Dispatching placeTetromino action')
       dispatchRef.current(placeTetromino())
       
       // Dispatch後の状態をチェック
