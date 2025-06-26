@@ -40,6 +40,8 @@ export interface InputCallbacks {
   onMoveLeft?: () => void
   onMoveRight?: () => void
   onSoftDrop?: () => void
+  onSoftDropStart?: () => void
+  onSoftDropEnd?: () => void
   onHardDrop?: () => void
   onRotate?: () => void
   onRotateCounterClockwise?: () => void
@@ -147,6 +149,11 @@ export const useKeyboardInput = (
 
     // 即座にアクション実行
     executeAction(binding.action)
+    
+    // ソフトドロップ開始処理
+    if (binding.action === 'softDrop' && callbacks.onSoftDropStart) {
+      callbacks.onSoftDropStart()
+    }
 
     // リピート可能なキーの場合、リピート設定
     if (binding.repeat) {
@@ -184,8 +191,13 @@ export const useKeyboardInput = (
     
     if (!binding) return
 
+    // ソフトドロップ終了処理
+    if (binding.action === 'softDrop' && callbacks.onSoftDropEnd) {
+      callbacks.onSoftDropEnd()
+    }
+
     cleanupKeyRepeat(key)
-  }, [isEnabled, keyBindings, cleanupKeyRepeat])
+  }, [isEnabled, keyBindings, cleanupKeyRepeat, callbacks])
 
   // フォーカス喪失時のクリーンアップ
   const handleBlur = useCallback(() => {

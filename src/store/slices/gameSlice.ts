@@ -3,7 +3,7 @@ import { Tetromino } from '@/features/game/utils/tetromino'
 import { TETROMINO_TYPES } from '@/types/game'
 
 // Redux専用のゲームロジックユーティリティ
-function getTetrominoBlocks(piece: {type: string, x: number, y: number, rotation: number}): {x: number, y: number}[] {
+function getTetrominoBlocks(piece: {type: string | null, x: number, y: number, rotation: number}): {x: number, y: number}[] {
   if (!piece.type || !TETROMINO_TYPES[piece.type as keyof typeof TETROMINO_TYPES]) {
     return []
   }
@@ -30,7 +30,7 @@ function getTetrominoBlocks(piece: {type: string, x: number, y: number, rotation
   return blocks
 }
 
-function canPlacePiece(field: (number | null)[][], piece: {type: string, x: number, y: number, rotation: number}): boolean {
+function canPlacePiece(field: (number | null)[][], piece: {type: string | null, x: number, y: number, rotation: number}): boolean {
   const blocks = getTetrominoBlocks(piece)
   
   for (const block of blocks) {
@@ -48,7 +48,7 @@ function canPlacePiece(field: (number | null)[][], piece: {type: string, x: numb
   return true
 }
 
-function generateFieldWithPiece(field: (number | null)[][], piece: {type: string, x: number, y: number, rotation: number}): (number | null)[][] {
+function generateFieldWithPiece(field: (number | null)[][], piece: {type: string | null, x: number, y: number, rotation: number}): (number | null)[][] {
   // フィールドをコピー
   const newField = field.map(row => [...row])
   
@@ -66,7 +66,7 @@ function generateFieldWithPiece(field: (number | null)[][], piece: {type: string
   return newField
 }
 
-function placePieceOnField(field: (number | null)[][], piece: {type: string, x: number, y: number, rotation: number}): (number | null)[][] {
+function placePieceOnField(field: (number | null)[][], piece: {type: string | null, x: number, y: number, rotation: number}): (number | null)[][] {
   if (!piece.type) return field
   
   const newField = field.map(row => [...row])
@@ -214,6 +214,8 @@ export interface GameState {
   lockTimer: number
   lockDelay: number
   isLocking: boolean
+  isSoftDropping: boolean
+  softDropInterval: number
 }
 
 const initialState: GameState = {
@@ -267,7 +269,9 @@ const initialState: GameState = {
   dropInterval: 1000, // 1秒間隔（レベル1）
   lockTimer: 0,
   lockDelay: 500, // 0.5秒のロック遅延
-  isLocking: false
+  isLocking: false,
+  isSoftDropping: false,
+  softDropInterval: 50 // 50ms間隔（ソフトドロップ時）
 }
 
 export const gameSlice = createSlice({
@@ -356,8 +360,8 @@ export const gameSlice = createSlice({
           state.currentPiece.y = testPiece.y
           state.lastAction = action.payload.dy > 0 ? 'drop' : 'move'
           
-          // 落下に関する状態リセット
-          if (action.payload.dy > 0 || action.payload.dx !== 0) {
+          // 水平移動時のみロック状態をリセット（垂直移動は自動落下と並列処理）
+          if (action.payload.dx !== 0 && action.payload.dy === 0) {
             state.isLocking = false
             state.lockTimer = 0
           }
@@ -388,8 +392,10 @@ export const gameSlice = createSlice({
         if (canPlacePiece(state.field, testPiece)) {
           state.currentPiece.rotation = newRotation
           state.lastAction = 'rotate'
-          state.isLocking = false
-          state.lockTimer = 0
+          // 回転時はロック状態を部分的にリセット（自動落下と並列処理を維持）
+          if (state.isLocking) {
+            state.lockTimer = Math.max(0, state.lockTimer - 100) // 100ms減らすのみ
+          }
           
           // 基本回転成功
           state.lastRotationKick = {
@@ -421,8 +427,10 @@ export const gameSlice = createSlice({
               state.currentPiece.y = kickTestPiece.y
               state.currentPiece.rotation = newRotation
               state.lastAction = 'rotate'
-              state.isLocking = false
-              state.lockTimer = 0
+              // Wall kick時もロック状態を部分的にリセット
+              if (state.isLocking) {
+                state.lockTimer = Math.max(0, state.lockTimer - 100)
+              }
               
               // Wall kick成功
               state.lastRotationKick = {
@@ -623,11 +631,17 @@ export const gameSlice = createSlice({
     updateDropInterval: (state, action: PayloadAction<number>) => {
       state.dropInterval = action.payload
     },
+    setSoftDropping: (state, action: PayloadAction<boolean>) => {
+      state.isSoftDropping = action.payload
+    },
     updateDropTimer: (state, action: PayloadAction<number>) => {
       state.dropTimer += action.payload
       
+      // 現在の落下間隔を決定（ソフトドロップ中か通常落下か）
+      const currentDropInterval = state.isSoftDropping ? state.softDropInterval : state.dropInterval
+      
       // 自動落下チェック
-      if (state.dropTimer >= state.dropInterval) {
+      if (state.dropTimer >= currentDropInterval) {
         state.dropTimer = 0
         
         // テトリミノを1行下に移動を試行
@@ -899,6 +913,7 @@ export const {
   updateLevelGaugeProgress,
   updateDropInterval,
   updateDropTimer,
+  setSoftDropping,
   exchangePiece,
   holdPiece,
   updateNextPieces,

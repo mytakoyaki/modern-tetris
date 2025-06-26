@@ -21,6 +21,7 @@ import {
   updateCurrentPiece,
   updateFeverTime,
   updateDropTimer,
+  setSoftDropping,
   exchangePiece,
   holdPiece,
   updateNextPieces,
@@ -232,6 +233,18 @@ export const useGameEngine = () => {
     }
   }, [gameState.isGameRunning])
 
+  const handleSoftDropStart = useCallback(() => {
+    if (gameState.isGameRunning) {
+      dispatchRef.current(setSoftDropping(true))
+    }
+  }, [gameState.isGameRunning])
+
+  const handleSoftDropEnd = useCallback(() => {
+    if (gameState.isGameRunning) {
+      dispatchRef.current(setSoftDropping(false))
+    }
+  }, [gameState.isGameRunning])
+
   const handleHardDrop = useCallback(() => {
     if (gameState.isGameRunning && gameState.currentPiece.type) {
       // Pure Redux hard drop
@@ -300,6 +313,8 @@ export const useGameEngine = () => {
     onMoveLeft: handleMoveLeft,
     onMoveRight: handleMoveRight,
     onSoftDrop: handleSoftDrop,
+    onSoftDropStart: handleSoftDropStart,
+    onSoftDropEnd: handleSoftDropEnd,
     onHardDrop: handleHardDrop,
     onRotate: handleRotate,
     onRotateCounterClockwise: handleRotateCounterClockwise,
