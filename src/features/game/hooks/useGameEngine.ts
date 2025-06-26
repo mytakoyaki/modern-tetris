@@ -157,10 +157,25 @@ export const useGameEngine = () => {
         dispatchRef.current(updateNextPieces(nextPieces))
       }
 
-      if (updateResult.tetrominoLocked && updateResult.clearedLines) {
-        // ライン消去処理
-        const clearedLinesCount = updateResult.clearedLines.length
-        if (clearedLinesCount > 0) {
+      if (updateResult.tetrominoLocked) {
+        console.log('[DEBUG] Tetromino locked - dispatching placeTetromino')
+        console.log('[DEBUG] Current blocksPlaced before dispatch:', currentGameState.blocksPlaced)
+        console.log('[DEBUG] Current feverMode state:', currentGameState.feverMode)
+        
+        // テトリミノが設置されたときは常にplaceTetromino()を呼び出し（フィーバーモード更新のため）
+        dispatchRef.current(placeTetromino())
+        
+        // Dispatch後の状態をチェック（非同期なので次のフレームで確認）
+        setTimeout(() => {
+          const newGameState = store.getState().game
+          console.log('[DEBUG] State after placeTetromino dispatch:')
+          console.log('[DEBUG] - blocksPlaced:', newGameState.blocksPlaced)
+          console.log('[DEBUG] - feverMode:', newGameState.feverMode)
+        }, 0)
+        
+        // ライン消去がある場合の追加処理
+        if (updateResult.clearedLines && updateResult.clearedLines.length > 0) {
+          const clearedLinesCount = updateResult.clearedLines.length
           console.log('[DEBUG] Lines cleared:', clearedLinesCount)
           
           // スコア計算とRedux更新
@@ -171,7 +186,6 @@ export const useGameEngine = () => {
           console.log('[DEBUG] Score added:', finalScore)
           
           dispatchRef.current(updateScore(finalScore))
-          dispatchRef.current(placeTetromino())
           
           // アチーブメント統計を更新
           dispatchRef.current(updateSessionStats({
@@ -181,6 +195,11 @@ export const useGameEngine = () => {
             tetrisCount: clearedLinesCount === 4 ? currentGameState.tetrisCount + 1 : currentGameState.tetrisCount,
             level: currentGameState.level,
             playTime: localGameTimeRef.current
+          }))
+        } else {
+          // ライン消去がない場合でもブロック設置統計は更新
+          dispatchRef.current(updateSessionStats({
+            blocksPlaced: currentGameState.blocksPlaced + 1
           }))
         }
       }
@@ -319,10 +338,23 @@ export const useGameEngine = () => {
 
   const handleHardDrop = useCallback(() => {
     if (gameFieldRef.current && gameState.isGameRunning) {
-      console.log('[DEBUG] Hard drop executed')
+      console.log('[DEBUG] Hard drop executed - dispatching placeTetromino')
+      console.log('[DEBUG] Current blocksPlaced before hard drop:', gameState.blocksPlaced)
+      console.log('[DEBUG] Current feverMode state before hard drop:', gameState.feverMode)
       
       gameFieldRef.current.hardDrop()
       dispatchRef.current(hardDropTetromino())
+      
+      // ハードドロップ時は常にplaceTetromino()を呼び出し（フィーバーモード更新のため）
+      dispatchRef.current(placeTetromino())
+      
+      // Dispatch後の状態をチェック
+      setTimeout(() => {
+        const newGameState = store.getState().game
+        console.log('[DEBUG] Hard drop - State after placeTetromino dispatch:')
+        console.log('[DEBUG] - blocksPlaced:', newGameState.blocksPlaced)
+        console.log('[DEBUG] - feverMode:', newGameState.feverMode)
+      }, 0)
       
       // ブロック設置統計を更新
       dispatchRef.current(updateSessionStats({

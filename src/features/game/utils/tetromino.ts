@@ -15,6 +15,10 @@ export class Tetromino {
 
   public getCurrentRotation(): number[][] {
     const shape = TETROMINO_TYPES[this.type]
+    if (!shape || !shape.rotations || !shape.rotations[this.rotation]) {
+      console.error('[DEBUG] Invalid tetromino shape or rotation:', { type: this.type, rotation: this.rotation, shape })
+      return []
+    }
     return shape.rotations[this.rotation]
   }
 
@@ -72,6 +76,11 @@ export class Tetromino {
 
   public getBlocksForRotation(rotation: number[][]): Block[] {
     const blocks: Block[] = []
+    
+    if (!rotation || !Array.isArray(rotation)) {
+      console.error('[DEBUG] Invalid rotation array:', rotation)
+      return blocks
+    }
     
     for (let row = 0; row < rotation.length; row++) {
       for (let col = 0; col < rotation[row].length; col++) {

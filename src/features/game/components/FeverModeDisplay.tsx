@@ -14,6 +14,16 @@ interface FeverModeDisplayProps {
 export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDisplayProps) {
   const dispatch = useDispatch()
   const { feverMode, blocksPlaced } = useSelector((state: RootState) => state.game)
+  
+  // DEBUG: フィーバーモード状態をログ出力
+  useEffect(() => {
+    console.log('[DEBUG] FeverModeDisplay - State changed:', {
+      isActive: feverMode.isActive,
+      timeRemaining: feverMode.timeRemaining,
+      blocksUntilActivation: feverMode.blocksUntilActivation,
+      blocksPlaced: blocksPlaced
+    })
+  }, [feverMode.isActive, feverMode.timeRemaining, feverMode.blocksUntilActivation, blocksPlaced])
 
   // フィーバーモードタイマー更新
   useEffect(() => {
@@ -35,7 +45,7 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
     if (feverMode.isActive) {
       return (feverMode.timeRemaining / FEVER_CONFIG.DURATION) * 100
     }
-    return (feverMode.blocksUntilActivation / FEVER_CONFIG.BLOCKS_NEEDED) * 100
+    return ((FEVER_CONFIG.BLOCKS_NEEDED - feverMode.blocksUntilActivation) / FEVER_CONFIG.BLOCKS_NEEDED) * 100
   }
 
   const getProgressColor = () => {

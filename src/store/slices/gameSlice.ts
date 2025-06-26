@@ -280,113 +280,44 @@ export const gameSlice = createSlice({
       }
     },
     placeTetromino: (state) => {
-      if (state.currentPiece.type) {
-        const tetromino = Tetromino.fromData(state.currentPiece)
-        
-        // フィールドにテトリミノを設置
-        state.field = placeTetrominoOnField(tetromino, state.field)
-        
-        // 完成したラインをチェック
-        const completedLines = getCompletedLines(state.field)
-        
-        if (completedLines.length > 0) {
-          // スピン検出
-          const spinResult = detectSpin({
-            tetromino,
-            lastAction: state.lastAction || 'move',
-            field: state.field,
-            wasWallKick: state.lastRotationKick?.wasWallKick || false,
-            kickIndex: state.lastRotationKick?.kickIndex || 0
-          }, completedLines.length)
-          
-          // ラインを削除
-          state.field = clearLines(state.field, completedLines)
-          
-          // 基本スコア計算
-          const lineScore = [0, 100, 400, 1000, 2000][completedLines.length] || 0
-          let totalScore = lineScore * state.level
-          
-          // フィーバーモード倍率適用
-          if (state.feverMode.isActive) {
-            totalScore = Math.floor(totalScore * FEVER_CONFIG.SCORE_MULTIPLIER)
-          }
-          
-          // スピンボーナス適用
-          if (spinResult.type) {
-            totalScore += spinResult.bonus
-            state.lastSpin = spinResult
-            
-            // Back-to-Back判定
-            if (isBackToBackEligible(spinResult)) {
-              if (state.backToBackCount > 0) {
-                totalScore = Math.floor(totalScore * 1.5) // 1.5倍ボーナス
-              }
-              state.backToBackCount++
-            } else {
-              state.backToBackCount = 0
-            }
-          } else {
-            // 4ライン消去の場合もBack-to-Back対象
-            if (completedLines.length === 4) {
-              if (state.backToBackCount > 0) {
-                totalScore = Math.floor(totalScore * 1.5)
-              }
-              state.backToBackCount++
-            } else {
-              state.backToBackCount = 0
-            }
-            state.lastSpin = null
-          }
-          
-          // コンボ計算
-          state.comboCount++
-          if (state.comboCount > 1) {
-            const comboBonus = Math.min(state.comboCount - 1, 10) * 50 * state.level
-            totalScore += comboBonus
-          }
-          
-          state.score += totalScore
-          state.lines += completedLines.length
-          
-          // ライン消去ボーナスポイント（追加実装予定）
-        } else {
-          // ライン消去なしの場合、コンボリセット
-          state.comboCount = 0
-          state.lastSpin = null
-        }
-        
-        // 基本設置ポイント
-        const placementPoints = calculatePointsGained('placement', 1)
-        state.pointSystem.totalPoints += placementPoints.total
-        state.recentPointsGained.push(placementPoints)
-        
-        // エクスチェンジカウントリセット（テトリミノ設置時）
-        state.pointSystem.exchangeCount = resetExchangeCount()
-        
-        // 統計更新
-        state.blocksPlaced += 1
-        
-        // フィーバーモードチェック
-        if (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED === 0) {
-          state.feverMode.isActive = true
-          state.feverMode.timeRemaining = FEVER_CONFIG.DURATION
-          state.feverMode.blocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED
-        } else {
-          state.feverMode.blocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED - (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED)
-        }
-        
-        // 現在のピースをクリア
-        state.currentPiece = {
-          type: null,
-          x: 3,
-          y: 0,
-          rotation: 0
-        }
-
-        // ホールドを再度可能にする
-        state.canHold = true
-        state.usedHoldSlots = []
+      console.log('[DEBUG] placeTetromino reducer called, blocksPlaced BEFORE:', state.blocksPlaced)
+      console.log('[DEBUG] placeTetromino reducer - currentPiece:', state.currentPiece)
+      
+      // currentPiece.typeのチェックを削除し、常にブロック設置処理を実行
+      console.log('[DEBUG] placeTetromino - proceeding without currentPiece.type check...')
+      
+      // フィールド操作は既にGameFieldで処理済みなのでスキップ
+      // ライン消去処理もGameEngineで処理済みなのでスキップして、直接統計更新に進む
+      
+      // 基本設置ポイント
+      const placementPoints = calculatePointsGained('placement', 1)
+      state.pointSystem.totalPoints += placementPoints.total
+      state.recentPointsGained.push(placementPoints)
+      
+      // エクスチェンジカウントリセット（テトリミノ設置時）
+      state.pointSystem.exchangeCount = resetExchangeCount()
+      
+      // 統計更新
+      state.blocksPlaced += 1
+      
+      // フィーバーモードチェック
+      console.log('[DEBUG] Fever mode check - blocksPlaced AFTER increment:', state.blocksPlaced, 'BLOCKS_NEEDED:', FEVER_CONFIG.BLOCKS_NEEDED)
+      if (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED === 0) {
+        console.log('[DEBUG] Fever mode ACTIVATED!')
+        state.feverMode.isActive = true
+        state.feverMode.timeRemaining = FEVER_CONFIG.DURATION
+        state.feverMode.blocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED
+      } else {
+        const newBlocksUntilActivation = FEVER_CONFIG.BLOCKS_NEEDED - (state.blocksPlaced % FEVER_CONFIG.BLOCKS_NEEDED)
+        console.log('[DEBUG] Fever mode update - blocksUntilActivation:', newBlocksUntilActivation)
+        state.feverMode.blocksUntilActivation = newBlocksUntilActivation
       }
+      
+      console.log('[DEBUG] placeTetromino - after fever mode update, blocksPlaced:', state.blocksPlaced, 'blocksUntilActivation:', state.feverMode.blocksUntilActivation)
+      
+      // ホールドを再度可能にする
+      state.canHold = true
+      state.usedHoldSlots = []
     },
     updateField: (state, action: PayloadAction<(number | null)[][]>) => {
       state.field = action.payload

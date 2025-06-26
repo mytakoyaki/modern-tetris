@@ -317,14 +317,14 @@ export default function Sidebar({ position }: SidebarProps) {
                 Inactive
               </Typography>
                   <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem', mb: 1.5 }}>
-                Next: {20 - (feverMode.blocksUntilActivation % 20)} blocks
+                Next: {feverMode.blocksUntilActivation} blocks
               </Typography>
                   
                   {/* Fever Activation Gauge */}
                   <Box sx={{ mb: 1 }}>
                     <ProgressGauge
                       label="Activation"
-                      current={20 - (feverMode.blocksUntilActivation % 20)}
+                      current={20 - feverMode.blocksUntilActivation}
                       max={20}
                       color="#ff69b4"
                       showValues={true}
