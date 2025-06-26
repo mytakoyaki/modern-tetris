@@ -362,12 +362,11 @@ export const gameSlice = createSlice({
             state.lockTimer = 0
           }
           
-          // ソフトドロップポイント（下方向の移動時）
+          // ソフトドロップポイント（下方向の移動時）- 累積のみ、recentには追加しない
           if (action.payload.dy > 0) {
             const pointsGained = calculatePointsGained('soft-drop', action.payload.dy)
             state.pointSystem.totalPoints += pointsGained.total
-            state.pointSystem.lastDropBonus = pointsGained.total
-            state.recentPointsGained.push(pointsGained)
+            state.pointSystem.lastDropBonus += pointsGained.total
           }
         }
       }
@@ -470,12 +469,11 @@ export const gameSlice = createSlice({
         state.currentPiece.y = testY
       }
       
-      // ハードドロップポイント計算
+      // ハードドロップポイント計算 - 累積のみ、recentには追加しない
       if (dropDistance > 0) {
         const pointsGained = calculatePointsGained('hard-drop', dropDistance)
         state.pointSystem.totalPoints += pointsGained.total
         state.pointSystem.lastDropBonus = pointsGained.total
-        state.recentPointsGained.push(pointsGained)
       }
       
       // ハードドロップ後は即座にロック
@@ -485,8 +483,28 @@ export const gameSlice = createSlice({
     placeTetromino: (state) => {
       // 基本設置ポイント
       const placementPoints = calculatePointsGained('placement', 1)
+      let totalBlockPoints = placementPoints.total
+      
+      // 累積された落下ポイントがある場合は追加
+      if (state.pointSystem.lastDropBonus > 0) {
+        totalBlockPoints += state.pointSystem.lastDropBonus
+      }
+      
+      // 総ポイントを更新
       state.pointSystem.totalPoints += placementPoints.total
-      state.recentPointsGained.push(placementPoints)
+      
+      // ブロック設置による総獲得ポイントをrecentに追加
+      const blockCompletionPoints = {
+        type: 'block-completion' as const,
+        basePoints: placementPoints.total,
+        dropBonus: state.pointSystem.lastDropBonus,
+        total: totalBlockPoints,
+        timestamp: Date.now()
+      }
+      state.recentPointsGained.push(blockCompletionPoints)
+      
+      // 落下ボーナスをリセット
+      state.pointSystem.lastDropBonus = 0
       
       // エクスチェンジカウントリセット（テトリミノ設置時）
       state.pointSystem.exchangeCount = resetExchangeCount()
@@ -626,11 +644,10 @@ export const gameSlice = createSlice({
             state.isLocking = false
             state.lockTimer = 0
             
-            // ソフトドロップポイント
+            // ソフトドロップポイント - 累積のみ
             const pointsGained = calculatePointsGained('soft-drop', 1)
             state.pointSystem.totalPoints += pointsGained.total
-            state.pointSystem.lastDropBonus = pointsGained.total
-            state.recentPointsGained.push(pointsGained)
+            state.pointSystem.lastDropBonus += pointsGained.total
           } else {
             // 下に移動できない場合、ロック処理開始
             if (!state.isLocking) {
@@ -647,10 +664,30 @@ export const gameSlice = createSlice({
         if (state.lockTimer >= state.lockDelay) {
           // テトリミノを自動ロック
           if (state.currentPiece.type) {
-            // placeTetromino を呼び出して統計を更新
+            // placeTetromino ロジックを実行（ブロック設置による総獲得ポイント記録）
             const placementPoints = calculatePointsGained('placement', 1)
+            let totalBlockPoints = placementPoints.total
+            
+            // 累積された落下ポイントがある場合は追加
+            if (state.pointSystem.lastDropBonus > 0) {
+              totalBlockPoints += state.pointSystem.lastDropBonus
+            }
+            
+            // 総ポイントを更新
             state.pointSystem.totalPoints += placementPoints.total
-            state.recentPointsGained.push(placementPoints)
+            
+            // ブロック設置による総獲得ポイントをrecentに追加
+            const blockCompletionPoints = {
+              type: 'block-completion' as const,
+              basePoints: placementPoints.total,
+              dropBonus: state.pointSystem.lastDropBonus,
+              total: totalBlockPoints,
+              timestamp: Date.now()
+            }
+            state.recentPointsGained.push(blockCompletionPoints)
+            
+            // 落下ボーナスをリセット
+            state.pointSystem.lastDropBonus = 0
             
             // エクスチェンジカウントリセット
             state.pointSystem.exchangeCount = resetExchangeCount()

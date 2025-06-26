@@ -16,13 +16,13 @@ import {
  * ポイント獲得計算
  */
 export function calculatePointsGained(
-  source: PointsGained['source'],
+  type: PointsGained['type'],
   baseAmount: number,
   multiplier: number = 1
 ): PointsGained {
   let amount = 0
 
-  switch (source) {
+  switch (type) {
     case 'placement':
       amount = POINTS_CONFIG.TETROMINO_PLACEMENT
       break
@@ -41,15 +41,19 @@ export function calculatePointsGained(
     case 'rank-bonus':
       amount = baseAmount
       break
+    case 'hold-cost':
+      amount = -baseAmount // 負の値でコスト表現
+      break
   }
 
   const total = Math.floor(amount * multiplier)
 
   return {
-    source,
+    type,
     amount,
     multiplier,
     total,
+    timestamp: Date.now()
   }
 }
 
@@ -136,20 +140,27 @@ export function resetExchangeCount(): number {
  * ポイント履歴用のフォーマット関数
  */
 export function formatPointsGained(pointsGained: PointsGained): string {
-  const { source, total, multiplier } = pointsGained
+  const { type, total, multiplier, basePoints, dropBonus } = pointsGained
 
-  const sourceNames = {
+  const typeNames = {
     placement: 'ブロック設置',
     'soft-drop': 'ソフトドロップ',
     'hard-drop': 'ハードドロップ',
     achievement: '実績達成',
     'rank-bonus': '段位ボーナス',
+    'hold-cost': 'ホールドコスト',
+    'block-completion': 'ブロック完了',
   } as const
 
-  const sourceName = sourceNames[source]
+  const typeName = typeNames[type]
   const multiplierText = multiplier && multiplier !== 1 ? ` (x${multiplier})` : ''
 
-  return `${sourceName}: +${total}P${multiplierText}`
+  // ブロック完了の場合もシンプルに総合ポイントのみ表示
+  if (type === 'block-completion') {
+    return `${typeName}: +${total}P${multiplierText}`
+  }
+
+  return `${typeName}: +${total}P${multiplierText}`
 }
 
 /**

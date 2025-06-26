@@ -21,10 +21,13 @@ export interface ExchangeResult {
 }
 
 export interface PointsGained {
-  source: 'placement' | 'soft-drop' | 'hard-drop' | 'achievement' | 'rank-bonus' | 'hold-cost'
-  amount: number
+  type: 'placement' | 'soft-drop' | 'hard-drop' | 'achievement' | 'rank-bonus' | 'hold-cost' | 'block-completion'
+  basePoints?: number
+  dropBonus?: number
+  amount?: number
   multiplier?: number
   total: number
+  timestamp?: number
 }
 
 // ポイント獲得設定
