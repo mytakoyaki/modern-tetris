@@ -393,10 +393,20 @@ export class GameField {
   }
 
   /**
-   * 落下速度設定
+   * 落下速度設定（レベルベース）
    */
-  setDropSpeed(speed: number): void {
-    this.dropInterval = Math.max(50, 1000 - (speed * 50)) // 最小50ms
+  setDropSpeed(level: number): void {
+    // CLAUDE.mdの詳細な落下速度テーブル（秒/行 → ミリ秒変換）
+    const fallSpeeds = {
+      1: 1000,  2: 900,   3: 800,   4: 700,   5: 600,
+      6: 550,   7: 500,   8: 450,   9: 400,   10: 400,
+      11: 380,  12: 360,  13: 340,  14: 320,  15: 300,
+      16: 280,  17: 260,  18: 250,  19: 240,  20: 250,
+      21: 240,  22: 230,  23: 220,  24: 210,  25: 220,
+      26: 210,  27: 205,  28: 200,  29: 200,  30: 200
+    }
+    
+    this.dropInterval = fallSpeeds[level as keyof typeof fallSpeeds] || 200
   }
 
   /**

@@ -14,27 +14,41 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ position }: SidebarProps) {
-  const { 
-    score, 
-    pointSystem, 
-    level, 
-    lines, 
-    holdSlots, 
+  const {
+    isGameRunning,
+    score,
+    level,
+    lines,
+    gameTime,
+    feverMode,
     nextPieces,
+    holdSlots,
+    currentRank,
+    rankProgress,
     lastSpin,
     backToBackCount,
     comboCount,
-    feverMode,
-    currentRank,
-    rankProgress,
-    blocksPlaced,
-    gameTime
+    pointSystem,
+    levelGaugeProgress,
+    blocksPlaced
   } = useSelector((state: RootState) => state.game)
 
   const formatNumber = (num: number | undefined) => {
     return (num ?? 0).toLocaleString()
   }
 
+  // 落下速度を取得する関数
+  const getDropSpeed = (level: number): number => {
+    const fallSpeeds = {
+      1: 1000,  2: 900,   3: 800,   4: 700,   5: 600,
+      6: 550,   7: 500,   8: 450,   9: 400,   10: 400,
+      11: 380,  12: 360,  13: 340,  14: 320,  15: 300,
+      16: 280,  17: 260,  18: 250,  19: 240,  20: 250,
+      21: 240,  22: 230,  23: 220,  24: 210,  25: 220,
+      26: 210,  27: 205,  28: 200,  29: 200,  30: 200
+    }
+    return fallSpeeds[level as keyof typeof fallSpeeds] || 200
+  }
 
   const renderHoldSlot = (index: number) => {
     const piece = holdSlots?.[index]
@@ -227,66 +241,62 @@ export default function Sidebar({ position }: SidebarProps) {
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
           {/* 左列 */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* Hold Slots */}
+        {/* Hold Slots */}
             <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
               <Typography variant="h6" sx={{ color: '#00ff88', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
-                HOLD
-              </Typography>
+            HOLD
+          </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                {[0, 1].map(renderHoldSlot)}
+          {[0, 1].map(renderHoldSlot)}
               </Box>
               <Typography variant="caption" sx={{ color: '#666', fontSize: '0.8rem', textAlign: 'center', display: 'block', mt: 1 }}>
-                Cost: 15P each
-              </Typography>
-            </Paper>
+            Cost: 15P each
+          </Typography>
+        </Paper>
 
-            {/* Level & Status */}
+        {/* Level & Status */}
             <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
               <Typography variant="h6" sx={{ color: '#ffd700', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
-                LEVEL
-              </Typography>
+            LEVEL
+          </Typography>
               <Typography variant="h4" sx={{ color: '#fff', mb: 1.5, fontSize: '1.8rem', textAlign: 'center' }}>
-                {level}
-              </Typography>
+            {level}
+          </Typography>
               
               {/* Level Progress Gauge */}
               <Box sx={{ mb: 1.5 }}>
                 <ProgressGauge
                   label="Level Progress"
-                  current={gameTime % 30000}
+                  current={levelGaugeProgress}
                   max={30000}
                   color="#ffd700"
                   showPercentage={true}
                   height={6}
                 />
-                {/* デバッグ情報 */}
-                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem', display: 'block', mt: 0.5 }}>
-                  Time: {Math.floor(gameTime / 1000)}s | Level: {level} | Progress: {Math.round((gameTime % 30000) / 300)}%
-                </Typography>
               </Box>
               
               <Divider sx={{ my: 1.5, backgroundColor: '#333' }} />
               <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
-                Lines: {formatNumber(lines)}
-              </Typography>
-            </Paper>
+            Lines: {formatNumber(lines)}
+          </Typography>
+        </Paper>
           </Box>
 
           {/* 右列 */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* Fever Mode */}
+        {/* Fever Mode */}
             <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
               <Typography variant="h6" sx={{ color: '#ff69b4', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
                 FEVER
-              </Typography>
-              {feverMode.isActive ? (
+          </Typography>
+          {feverMode.isActive ? (
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h5" sx={{ color: '#ff69b4', mb: 1.5, fontSize: '1.4rem' }}>
-                    ACTIVE
-                  </Typography>
+                ACTIVE
+              </Typography>
                   <Typography variant="body2" sx={{ color: '#ff69b4', fontSize: '0.9rem', mb: 1.5 }}>
-                    Time: {Math.ceil(feverMode.timeRemaining / 1000)}s
-                  </Typography>
+                Time: {Math.ceil(feverMode.timeRemaining / 1000)}s
+              </Typography>
                   
                   {/* Fever Time Gauge */}
                   <Box sx={{ mb: 1 }}>
@@ -299,15 +309,15 @@ export default function Sidebar({ position }: SidebarProps) {
                       height={6}
                     />
                   </Box>
-                </Box>
-              ) : (
+            </Box>
+          ) : (
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="body1" sx={{ color: '#666', mb: 1.5, fontSize: '1rem' }}>
-                    Inactive
-                  </Typography>
+                Inactive
+              </Typography>
                   <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem', mb: 1.5 }}>
-                    Next: {20 - (feverMode.blocksUntilActivation % 20)} blocks
-                  </Typography>
+                Next: {20 - (feverMode.blocksUntilActivation % 20)} blocks
+              </Typography>
                   
                   {/* Fever Activation Gauge */}
                   <Box sx={{ mb: 1 }}>
@@ -320,37 +330,37 @@ export default function Sidebar({ position }: SidebarProps) {
                       height={6}
                     />
                   </Box>
-                </Box>
-              )}
-            </Paper>
+            </Box>
+          )}
+        </Paper>
 
-            {/* Spin Statistics */}
-            <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+        {/* Spin Statistics */}
+        <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
               <Typography variant="h6" sx={{ color: '#a020f0', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
                 SPIN
-              </Typography>
-              
+          </Typography>
+          
               <Box sx={{ textAlign: 'center' }}>
-                {lastSpin?.type && (
+          {lastSpin?.type && (
                   <Box sx={{ mb: 1.5 }}>
                     <Typography variant="body2" sx={{ color: '#00ff88', fontSize: '0.9rem' }}>
-                      Last: {lastSpin.type} {lastSpin.variant}
-                    </Typography>
-                  </Box>
-                )}
-                
-                {backToBackCount > 0 && (
+                Last: {lastSpin.type} {lastSpin.variant}
+              </Typography>
+            </Box>
+          )}
+          
+          {backToBackCount > 0 && (
                   <Box sx={{ mb: 1.5 }}>
                     <Typography variant="body2" sx={{ color: '#ff8c00', fontSize: '0.9rem' }}>
                       B2B: {backToBackCount}
-                    </Typography>
-                  </Box>
-                )}
-                
-                {comboCount > 0 && (
-                  <Box>
+              </Typography>
+            </Box>
+          )}
+          
+          {comboCount > 0 && (
+            <Box>
                     <Typography variant="body2" sx={{ color: '#ffd700', fontSize: '0.9rem' }}>
-                      Combo: {comboCount}
+                Combo: {comboCount}
                     </Typography>
                   </Box>
                 )}
@@ -411,19 +421,19 @@ export default function Sidebar({ position }: SidebarProps) {
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
         {/* 左列 */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Score */}
+      {/* Score */}
           <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
             <Typography variant="h6" sx={{ color: '#00ff88', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
-              SCORE
-            </Typography>
+          SCORE
+        </Typography>
             <Typography variant="h4" sx={{ color: '#fff', mb: 1.5, fontSize: '1.8rem', textAlign: 'center' }}>
-              {formatNumber(score)}
-            </Typography>
+          {formatNumber(score)}
+        </Typography>
             <Divider sx={{ my: 1.5, backgroundColor: '#333' }} />
             <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
-              Points: {formatNumber(pointSystem?.totalPoints)}
-            </Typography>
-          </Paper>
+          Points: {formatNumber(pointSystem?.totalPoints)}
+        </Typography>
+      </Paper>
 
           {/* Next Pieces */}
           <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
@@ -449,15 +459,15 @@ export default function Sidebar({ position }: SidebarProps) {
 
         {/* 右列 */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Points System */}
+      {/* Points System */}
           <Box>
-            <PointsDisplay variant="detailed" />
-          </Box>
+        <PointsDisplay variant="detailed" />
+      </Box>
 
-          {/* Exchange Controls */}
+      {/* Exchange Controls */}
           <Box>
-            <ExchangeControls />
-          </Box>
+        <ExchangeControls />
+      </Box>
 
           {/* Game Stats */}
           <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
@@ -473,9 +483,9 @@ export default function Sidebar({ position }: SidebarProps) {
               </Typography>
               <Typography variant="body2" sx={{ color: '#fff', fontSize: '0.9rem' }}>
                 Lines: {lines}
-              </Typography>
+        </Typography>
             </Box>
-          </Paper>
+      </Paper>
         </Box>
       </Box>
     </Box>

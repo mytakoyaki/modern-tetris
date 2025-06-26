@@ -87,30 +87,30 @@ export default function ExchangeControls() {
             </Typography>
           </Box>
 
-          <Button
-            fullWidth
-            variant="outlined"
+                <Button
+                  fullWidth
+                  variant="outlined"
             disabled={!canExchange}
             onClick={handleExchange}
-            sx={{
+                  sx={{
               minHeight: '40px',
               borderColor: '#00ff88',
               color: '#00ff88',
               backgroundColor: 'transparent',
-              '&:hover': {
+                    '&:hover': {
                 backgroundColor: 'rgba(0, 255, 136, 0.1)',
                 borderColor: '#00ff88'
-              },
-              '&:disabled': {
-                borderColor: '#333',
-                color: '#666'
-              },
+                    },
+                    '&:disabled': {
+                      borderColor: '#333',
+                      color: '#666'
+                    },
               fontSize: '0.9rem',
               fontWeight: 'bold'
-            }}
-          >
+                      }}
+                    >
             EXCHANGE PIECE
-          </Button>
+                </Button>
 
           {!canExchange && (
             <Typography 

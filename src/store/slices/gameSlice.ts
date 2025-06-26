@@ -78,6 +78,9 @@ export interface GameState {
   gameTime: number
   blocksPlaced: number
   
+  // Level gauge progress (独立したタイマー用)
+  levelGaugeProgress: number
+  
   // Spin system
   lastSpin: SpinResult | null
   backToBackCount: number
@@ -123,6 +126,7 @@ const initialState: GameState = {
   recentPointsGained: [],
   gameTime: 0,
   blocksPlaced: 0,
+  levelGaugeProgress: 0,
   lastSpin: null,
   backToBackCount: 0,
   comboCount: 0,
@@ -377,7 +381,7 @@ export const gameSlice = createSlice({
         state.usedHoldSlots = []
       }
     },
-    updateField: (state, action: PayloadAction<number[][]>) => {
+    updateField: (state, action: PayloadAction<(number | null)[][]>) => {
       state.field = action.payload
     },
     toggleLayoutOrientation: (state) => {
@@ -399,6 +403,9 @@ export const gameSlice = createSlice({
     },
     updateGameTime: (state, action: PayloadAction<number>) => {
       state.gameTime += action.payload
+    },
+    updateLevelGaugeProgress: (state, action: PayloadAction<number>) => {
+      state.levelGaugeProgress = action.payload
     },
     exchangePiece: (state) => {
       const exchangeResult = attemptExchange(
@@ -506,6 +513,7 @@ export const {
   updateFeverTime,
   updateLevel,
   updateGameTime,
+  updateLevelGaugeProgress,
   exchangePiece,
   holdPiece,
   updateNextPieces,

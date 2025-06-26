@@ -50,7 +50,7 @@ export default function GameContainer() {
         flex: 1,
         minWidth: 0
       }}>
-        <GameField />
+      <GameField />
       </Box>
       <Box sx={{ 
         display: 'flex', 
@@ -61,7 +61,7 @@ export default function GameContainer() {
         justifyContent: 'center',
         alignItems: 'center'
       }}>
-        <Sidebar position="right" />
+      <Sidebar position="right" />
       </Box>
     </Box>
   )

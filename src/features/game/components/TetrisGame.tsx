@@ -17,7 +17,8 @@ import DangerModeEffects from './DangerModeEffects'
 
 export default function TetrisGame() {
   const { isGameRunning, isGameOver, score } = useSelector((state: RootState) => state.game)
-  const { startGame } = useGameEngine()
+  const gameEngine = useGameEngine()
+  const { startGame } = gameEngine
 
   // ゲーム開始画面
   const renderStartScreen = () => (
