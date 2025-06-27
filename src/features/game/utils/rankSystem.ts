@@ -9,13 +9,18 @@ import { Rank, RankProgress, RANKS, RANK_PROMOTION_BONUS, RankIndex } from '../.
  * スコアから現在の段位を取得
  */
 export function getCurrentRank(score: number): Rank {
+  // デバッグログ
+  console.log('getCurrentRank called with score:', score)
+  
   // スコアが閾値を満たす最高段位を逆順で検索
   for (let i = RANKS.length - 1; i >= 0; i--) {
     if (score >= RANKS[i].threshold) {
+      console.log('Found rank:', RANKS[i].name, 'for score:', score)
       return RANKS[i]
     }
   }
   
+  console.log('Returning default rank (無段) for score:', score)
   return RANKS[0] // 無段
 }
 
@@ -34,6 +39,8 @@ export function getNextRank(currentRankIndex: number): Rank | null {
  * 段位進捗情報を計算
  */
 export function calculateRankProgress(score: number): RankProgress {
+  console.log('calculateRankProgress called with score:', score)
+  
   const currentRank = getCurrentRank(score)
   const nextRank = getNextRank(currentRank.index)
   
@@ -46,16 +53,27 @@ export function calculateRankProgress(score: number): RankProgress {
     const scoreDifference = nextThreshold - currentThreshold
     
     progressToNext = Math.min(100, (scoreAboveCurrent / scoreDifference) * 100)
+    console.log('Progress calculation:', {
+      currentRank: currentRank.name,
+      nextRank: nextRank.name,
+      scoreAboveCurrent,
+      scoreDifference,
+      progressToNext
+    })
   } else {
     progressToNext = 100 // 最高段位の場合
+    console.log('Max rank reached, progress set to 100%')
   }
   
-  return {
+  const result = {
     currentRank,
     nextRank,
     progressToNext,
     isPromoted: false
   }
+  
+  console.log('calculateRankProgress result:', result)
+  return result
 }
 
 /**

@@ -162,9 +162,9 @@ const AchievementDisplay: React.FC = () => {
         ))}
       </Tabs>
 
-      <Grid container spacing={2}>
+      <Grid container columns={12} spacing={2}>
         {filteredAchievements.map(achievement => (
-          <Grid item xs={12} sm={6} md={4} key={achievement.id}>
+          <Grid component="div" key={achievement.id} style={{ gridColumn: 'span 12' }}>
             <AchievementCard achievement={achievement} />
           </Grid>
         ))}

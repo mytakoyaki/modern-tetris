@@ -7,6 +7,7 @@ import type { RootState } from '@/store/store'
 import PointsDisplay from './PointsDisplay'
 import ExchangeControls from './ExchangeControls'
 import ProgressGauge from './ProgressGauge'
+import { getCurrentRank, calculateRankProgress } from '../utils/rankSystem'
 
 interface SidebarProps {
   position: 'left' | 'right'
@@ -21,8 +22,6 @@ export default function Sidebar({ position }: SidebarProps) {
     feverMode,
     nextPieces,
     holdSlots,
-    currentRank,
-    rankProgress,
     lastSpin,
     backToBackCount,
     comboCount,
@@ -30,6 +29,18 @@ export default function Sidebar({ position }: SidebarProps) {
     levelGaugeProgress,
     blocksPlaced
   } = useSelector((state: RootState) => state.game)
+
+  // 段位はscoreから毎回計算
+  const currentRank = getCurrentRank(score)
+  const rankProgress = calculateRankProgress(score)
+
+  // デバッグ用ログ（段位更新確認）
+  console.log('Sidebar - Rank Debug:', {
+    score,
+    currentRank: currentRank?.name,
+    rankProgress: rankProgress?.progressToNext,
+    nextRank: rankProgress?.nextRank?.name
+  })
 
   const formatNumber = (num: number | undefined) => {
     return (num ?? 0).toLocaleString()
@@ -356,34 +367,27 @@ export default function Sidebar({ position }: SidebarProps) {
         </Box>
 
         {/* 段位表示（2列分使用） */}
-        <Paper sx={{ p: 2, mt: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)', gridColumn: 'span 2' }}>
+        <Paper 
+          key={`rank-${currentRank?.name}-${rankProgress?.progressToNext?.toFixed(2)}-${score}`}
+          sx={{ p: 2, mt: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)', gridColumn: 'span 2' }}
+        >
           <Typography variant="h6" sx={{ color: '#ffd700', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
             RANK
           </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-            <Box sx={{ textAlign: 'center', flex: 1 }}>
-              <Typography variant="h5" sx={{ color: '#ffd700', mb: 1, fontSize: '1.6rem' }}>
-                {currentRank.name}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.8rem' }}>
-                Current Rank
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center', flex: 1 }}>
-              <Typography variant="h5" sx={{ color: '#00ff88', mb: 1, fontSize: '1.6rem' }}>
-                {rankProgress.nextRank?.name || 'MAX'}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.8rem' }}>
-                Next Rank
-              </Typography>
-            </Box>
+          <Box sx={{ textAlign: 'center', mb: 1.5 }}>
+            <Typography variant="h5" sx={{ color: '#ffd700', mb: 1, fontSize: '1.6rem' }}>
+              {currentRank?.name || 'Loading...'}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#666', fontSize: '0.8rem' }}>
+              Current Rank
+            </Typography>
           </Box>
           
           {/* Rank Progress Gauge */}
           <Box sx={{ mb: 1 }}>
             <ProgressGauge
               label="Rank Progress"
-              current={Math.round(rankProgress.progressToNext * 100)}
+              current={Math.round(rankProgress?.progressToNext || 0)}
               max={100}
               color="#00ff88"
               showPercentage={true}
@@ -393,7 +397,11 @@ export default function Sidebar({ position }: SidebarProps) {
           
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" sx={{ color: '#fff', fontSize: '0.9rem' }}>
-              Progress: {Math.round(rankProgress.progressToNext * 100)}%
+              Progress: {Math.round(rankProgress?.progressToNext || 0)}%
+            </Typography>
+            {/* デバッグ情報 */}
+            <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem', display: 'block', mt: 0.5 }}>
+              Debug: Score={score}, Rank={currentRank?.name}, Progress={rankProgress?.progressToNext?.toFixed(2)}
             </Typography>
           </Box>
         </Paper>

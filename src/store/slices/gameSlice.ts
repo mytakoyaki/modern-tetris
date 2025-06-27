@@ -7,7 +7,6 @@ import { Tetromino } from '@/features/game/utils/tetromino'
 import type { PointsState, PointsGained } from '@/types/points'
 import { FEVER_CONFIG } from '@/types/points'
 import type { Rank, RankProgress } from '@/types/rank'
-import { RANKS } from '@/types/rank'
 import { 
   calculatePointsGained, 
   getNextExchangeCost, 
@@ -19,7 +18,8 @@ import {
 import { 
   calculateRankProgress, 
   checkPromotion,
-  calculateRankBonus
+  calculateRankBonus,
+  getCurrentRank
 } from '@/features/game/utils/rankSystem'
 
 // Redux専用のゲームロジックユーティリティ
@@ -240,13 +240,16 @@ const initialState: GameState = {
     timeRemaining: 0,
     blocksUntilActivation: FEVER_CONFIG.BLOCKS_NEEDED
   },
-  currentRank: RANKS[0],
-  rankProgress: {
-    currentRank: RANKS[0],
-    nextRank: RANKS[1],
-    progressToNext: 0,
-    isPromoted: false
-  },
+  currentRank: (() => {
+    const rank = getCurrentRank(0)
+    console.log('Initial rank setup:', rank)
+    return rank
+  })(),
+  rankProgress: (() => {
+    const progress = calculateRankProgress(0)
+    console.log('Initial rank progress setup:', progress)
+    return progress
+  })(),
   recentPromotions: [],
   layoutOrientation: 'horizontal',
   
@@ -268,6 +271,11 @@ export const gameSlice = createSlice({
       state.isGameRunning = true
       state.isGameOver = false
       state.isPaused = false
+      
+      // 段位をリセット（毎回新しいゲームで段位は0から開始）
+      state.currentRank = getCurrentRank(0)
+      state.rankProgress = calculateRankProgress(0)
+      state.recentPromotions = []
     },
     pauseGame: (state) => {
       state.isPaused = !state.isPaused
@@ -275,17 +283,35 @@ export const gameSlice = createSlice({
     endGame: (state) => {
       state.isGameRunning = false
       state.isGameOver = true
+      
+      // ゲーム終了時に現在のスコアに基づいて段位を更新
+      state.currentRank = getCurrentRank(state.score)
+      state.rankProgress = calculateRankProgress(state.score)
     },
     updateScore: (state, action: PayloadAction<number>) => {
       const oldScore = state.score
       state.score += action.payload
       
-      // 段位チェック
+      console.log('updateScore called:', {
+        oldScore,
+        scoreAdded: action.payload,
+        newScore: state.score
+      })
+      
+      // 現在のスコアに基づいて段位を常に更新
+      const currentRankBasedOnScore = getCurrentRank(state.score)
+      
+      // 段位昇格チェック
       const promotionCheck = checkPromotion(oldScore, state.score)
+      
+      console.log('Rank update:', {
+        oldRank: getCurrentRank(oldScore).name,
+        newRank: currentRankBasedOnScore.name,
+        wasPromoted: promotionCheck.wasPromoted
+      })
       
       if (promotionCheck.wasPromoted) {
         // 昇格処理
-        state.currentRank = promotionCheck.newRank
         state.recentPromotions.push(promotionCheck.newRank)
         
         // 昇格ボーナス
@@ -298,8 +324,16 @@ export const gameSlice = createSlice({
         state.recentPointsGained.push(promotionPoints)
       }
       
+      // 現在の段位を常に現在のスコアに基づいて更新
+      state.currentRank = currentRankBasedOnScore
+      
       // 段位進捗更新
       state.rankProgress = calculateRankProgress(state.score)
+      
+      console.log('Final rank state:', {
+        currentRank: state.currentRank.name,
+        progressToNext: state.rankProgress.progressToNext
+      })
     },
     spawnTetromino: (state, action: PayloadAction<{type: 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L', x?: number, y?: number}>) => {
       // ゲームが実行中でない場合は何もしない
@@ -953,8 +987,75 @@ export const gameSlice = createSlice({
       state.canHold = true
     },
     
-    resetGame: () => {
-      return initialState
+    resetGame: (state) => {
+      // ゲーム状態を完全にリセット
+      state.field = Array(20).fill(null).map(() => Array(10).fill(null))
+      state.currentPiece = {
+        type: null,
+        x: 3,
+        y: 0,
+        rotation: 0
+      }
+      state.holdSlots = [null, null]
+      state.canHold = true
+      state.usedHoldSlots = []
+      state.lastAction = null
+      state.lastRotationKick = null
+      state.nextPieces = []
+      state.isGameRunning = false
+      state.isPaused = false
+      state.isGameOver = false
+      state.score = 0
+      state.level = 1
+      state.lines = 0
+      state.pointSystem = createInitialPointsState()
+      state.recentPointsGained = []
+      state.gameTime = 0
+      state.blocksPlaced = 0
+      state.tetrisCount = 0
+      state.holdCount = 0
+      state.exchangeCount = 0
+      state.levelGaugeProgress = 0
+      state.lastSpin = null
+      state.backToBackCount = 0
+      state.comboCount = 0
+      state.wasWallKick = false
+      state.kickIndex = 0
+      state.feverMode = {
+        isActive: false,
+        timeRemaining: 0,
+        blocksUntilActivation: FEVER_CONFIG.BLOCKS_NEEDED
+      }
+      state.recentPromotions = []
+      state.dropTimer = 0
+      state.lockTimer = 0
+      state.isLocking = false
+      state.isSoftDropping = false
+      
+      // 段位を現在のスコア（0）に基づいてリセット
+      state.currentRank = getCurrentRank(0)
+      state.rankProgress = calculateRankProgress(0)
+    },
+    
+    // デバッグ用アクション: スコアを直接設定
+    setScore: (state, action: PayloadAction<number>) => {
+      const oldScore = state.score
+      state.score = action.payload
+      
+      // 現在のスコアに基づいて段位を常に更新
+      const currentRankBasedOnScore = getCurrentRank(state.score)
+      
+      // 段位昇格チェック
+      const promotionCheck = checkPromotion(oldScore, state.score)
+      
+      if (promotionCheck.wasPromoted) {
+        state.recentPromotions.push(promotionCheck.newRank)
+      }
+      
+      // 現在の段位を常に現在のスコアに基づいて更新
+      state.currentRank = currentRankBasedOnScore
+      
+      state.rankProgress = calculateRankProgress(state.score)
     }
   }
 })
@@ -986,7 +1087,8 @@ export const {
   holdPiece,
   updateNextPieces,
   resetHoldSlots,
-  resetGame
+  resetGame,
+  setScore
 } = gameSlice.actions
 
 export default gameSlice.reducer
