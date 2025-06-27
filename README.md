@@ -157,7 +157,36 @@ A modern implementation of Tetris built with Next.js, React, Redux, and Material
 
 ## 🚀 Live Demo
 
-Play the game: [Modern Tetris on GitHub Pages](https://your-username.github.io/modern-tetris/)
+Play the game: [Modern Tetris on GitHub Pages](https://mytakoyaki.github.io/project-tetris/)
+
+## 📦 Deployment
+
+### GitHub Pages Deployment
+
+This project is configured for automatic deployment to GitHub Pages using GitHub Actions.
+
+1. **Repository Setup**:
+   - Ensure your repository is public
+   - Go to Settings > Pages
+   - Set source to "GitHub Actions"
+
+2. **Automatic Deployment**:
+   - Push to `main` branch triggers automatic build and deployment
+   - GitHub Actions will build the project and deploy to GitHub Pages
+   - The site will be available at: `https://mytakoyaki.github.io/project-tetris/`
+
+3. **Manual Deployment**:
+   ```bash
+   npm run build
+   # The built files will be in the 'out' directory
+   ```
+
+### Local Development
+
+```bash
+npm run dev
+# Open http://localhost:3000
+```
 
 ## 🛠️ Development
 
@@ -233,7 +262,7 @@ This project is configured for automatic deployment to GitHub Pages:
 
 1. Push to the `main` branch
 2. GitHub Actions will automatically build and deploy
-3. The game will be available at: `https://your-username.github.io/modern-tetris/`
+3. The game will be available at: `https://mytakoyaki.github.io/project-tetris/`
 
 ### Manual Deployment
 
