@@ -21,7 +21,7 @@ export interface ExchangeResult {
 }
 
 export interface PointsGained {
-  type: 'placement' | 'soft-drop' | 'hard-drop' | 'achievement' | 'rank-bonus' | 'hold-cost' | 'block-completion'
+  type: 'placement' | 'soft-drop' | 'hard-drop' | 'achievement' | 'rank-bonus' | 'hold-cost' | 'block-completion' | 'clear-row-cost'
   basePoints?: number
   dropBonus?: number
   amount?: number

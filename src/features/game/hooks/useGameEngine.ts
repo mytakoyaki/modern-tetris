@@ -27,7 +27,8 @@ import {
   updateGameTime,
   updateLevelGaugeProgress,
   updateDropInterval,
-  spawnTetromino
+  spawnTetromino,
+  clearBottomRow
 } from '@/store/slices/gameSlice'
 import { 
   updateSessionStats, 
@@ -263,7 +264,7 @@ export const useGameEngine = () => {
   // 純Redux回転処理
   const handleRotate = useCallback(() => {
     if (gameState.isGameRunning) {
-      dispatchRef.current(rotateTetromino({ clockwise: true }))
+      dispatchRef.current(rotateTetromino({}))
     }
   }, [gameState.isGameRunning])
 
@@ -308,6 +309,13 @@ export const useGameEngine = () => {
     }
   }, [gameState.isGameRunning, gameState.exchangeCount])
 
+  // 一列消去処理
+  const handleLineDelete = useCallback(() => {
+    if (gameState.isGameRunning) {
+      dispatchRef.current(clearBottomRow())
+    }
+  }, [gameState.isGameRunning])
+
   // キーボード入力設定
   useKeyboardInput({
     onMoveLeft: handleMoveLeft,
@@ -321,6 +329,7 @@ export const useGameEngine = () => {
     onHold1: handleHold1,
     onHold2: handleHold2,
     onExchange: handleExchange,
+    onLineDelete: handleLineDelete,
   }, gameState.isGameRunning)
 
   // ゲームループのクリーンアップ

@@ -439,6 +439,71 @@ export default function Sidebar({ position }: SidebarProps) {
             </Box>
           </Paper>
 
+          {/* Key Operation Guide */}
+          <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
+            <Typography variant="h6" sx={{ color: '#00ff88', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
+              CONTROLS
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
+                  ← →
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#fff', fontSize: '0.7rem' }}>
+                  Move
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
+                  ↓
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#fff', fontSize: '0.7rem' }}>
+                  Soft Drop
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
+                  ↑
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#fff', fontSize: '0.7rem' }}>
+                  Rotate
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
+                  Space
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#fff', fontSize: '0.7rem' }}>
+                  Hard Drop
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
+                  C
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#fff', fontSize: '0.7rem' }}>
+                  Hold
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
+                  L
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#fff', fontSize: '0.7rem' }}>
+                  Clear Bottom Row
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
+                  P
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#fff', fontSize: '0.7rem' }}>
+                  Pause
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+
           {/* ゲームコントロールはuseGameEngineで処理 */}
         </Box>
 
@@ -454,7 +519,7 @@ export default function Sidebar({ position }: SidebarProps) {
         <ExchangeControls />
       </Box>
 
-          {/* Game Stats */}
+      {/* Game Stats */}
           <Paper sx={{ p: 2, backgroundColor: 'rgba(26, 26, 26, 0.9)' }}>
             <Typography variant="h6" sx={{ color: '#00ff88', mb: 1.5, fontSize: '1.1rem', textAlign: 'center' }}>
               STATS

@@ -194,8 +194,13 @@ export class GameField {
     
     const tetromino = this.currentTetromino.clone()
     
+    // フィールドの型を変換（SRS関数用）
+    const fieldForSRS = this.field.map(row => 
+      row.map(cell => cell !== null ? cell : 0)
+    )
+    
     // SRS回転試行
-    const rotationResult = attemptSRSRotation(tetromino, this.field, clockwise)
+    const rotationResult = attemptSRSRotation(tetromino, fieldForSRS, clockwise)
     
     if (rotationResult.success) {
       this.currentTetromino.x = rotationResult.newX
@@ -560,5 +565,82 @@ export class GameField {
     this.lockTimer = 0
     
     console.log('[DEBUG] GameField.setCurrentTetromino called:', { type, x, y, rotation })
+  }
+
+  /**
+   * 重力による落下処理
+   * 空の行の上にあるブロックを下に落とす
+   */
+  applyGravity(field: (number | null)[][]): (number | null)[][] {
+    const newField = field.map(row => [...row])
+    const FIELD_HEIGHT = newField.length
+    const FIELD_WIDTH = newField[0].length
+    
+    let hasChanges = true
+    let iterations = 0
+    const maxIterations = FIELD_HEIGHT // 無限ループ防止
+    
+    // 変化がなくなるまで繰り返し
+    while (hasChanges && iterations < maxIterations) {
+      hasChanges = false
+      iterations++
+      
+      // 下から上に向かって処理（重力のため）
+      for (let y = FIELD_HEIGHT - 1; y >= 0; y--) {
+        // 現在の行が空かチェック
+        const isCurrentRowEmpty = newField[y].every(cell => cell === null)
+        
+        if (isCurrentRowEmpty) {
+          // 空の行の上にあるブロックを探して下に落とす
+          for (let aboveY = y - 1; aboveY >= 0; aboveY--) {
+            const hasBlocksAbove = newField[aboveY].some(cell => cell !== null)
+            
+            if (hasBlocksAbove) {
+              // 上の行のブロックを現在の行に移動
+              for (let x = 0; x < FIELD_WIDTH; x++) {
+                newField[y][x] = newField[aboveY][x]
+                newField[aboveY][x] = null
+              }
+              hasChanges = true
+              break // 一つの行を落としたら次の空の行を処理
+            }
+          }
+        }
+      }
+    }
+    
+    if (iterations >= maxIterations) {
+      console.warn('[WARNING] Gravity iteration limit reached')
+    }
+    
+    return newField
+  }
+
+  /**
+   * 一列消去（一番下の列を消去）
+   */
+  clearBottomRow(field: (number | null)[][]): (number | null)[][] {
+    // 一番下の行を空にする
+    let newField = field.map((row, index) => {
+      if (index === 19) { // 一番下の行（19行目）
+        return Array(10).fill(null) // 空の行に置き換え
+      }
+      return [...row]
+    })
+    
+    // 重力を適用してブロックを落下させる
+    newField = this.applyGravity(newField)
+    
+    console.log('[DEBUG] Bottom row cleared and gravity applied')
+    
+    return newField
+  }
+
+  /**
+   * 一列消去が可能かチェック
+   */
+  canClearBottomRow(field: (number | null)[][]): boolean {
+    // 一番下の行（19行目）にブロックがあるかチェック
+    return field[19]?.some(cell => cell !== null) || false
   }
 }

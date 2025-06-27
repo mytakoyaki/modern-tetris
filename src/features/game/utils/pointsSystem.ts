@@ -44,6 +44,9 @@ export function calculatePointsGained(
     case 'hold-cost':
       amount = -baseAmount // 負の値でコスト表現
       break
+    case 'clear-row-cost':
+      amount = -baseAmount // 負の値でコスト表現
+      break
   }
 
   const total = Math.floor(amount * multiplier)
@@ -150,6 +153,7 @@ export function formatPointsGained(pointsGained: PointsGained): string {
     'rank-bonus': '段位ボーナス',
     'hold-cost': 'ホールドコスト',
     'block-completion': 'ブロック完了',
+    'clear-row-cost': '一列消去コスト',
   } as const
 
   const typeName = typeNames[type]

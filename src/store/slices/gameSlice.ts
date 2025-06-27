@@ -1037,6 +1037,81 @@ export const gameSlice = createSlice({
       state.rankProgress = calculateRankProgress(0)
     },
     
+    // 一列消去アクション
+    clearBottomRow: (state) => {
+      // ゲームが実行中でない場合は何もしない
+      if (!state.isGameRunning) return
+      
+      // 一列消去コスト
+      const clearRowCost = 200
+      
+      // ポイントが不足している場合は何もしない
+      if (state.pointSystem.totalPoints < clearRowCost) return
+      
+      // 一番下の行（19行目）にブロックがあるかチェック
+      const bottomRowHasBlocks = state.field[19]?.some(cell => cell !== null)
+      if (!bottomRowHasBlocks) return
+      
+      // コストを消費
+      state.pointSystem.totalPoints -= clearRowCost
+      
+      // コスト消費の記録
+      const clearRowCostPoints = calculatePointsGained('clear-row-cost', -clearRowCost)
+      state.recentPointsGained.push(clearRowCostPoints)
+      
+      // 一番下の行を消去して重力を適用
+      let newField = state.field.map((row, index) => {
+        if (index === 19) {
+          return Array(10).fill(null)
+        }
+        return [...row]
+      })
+      
+      // 重力による落下処理
+      const FIELD_HEIGHT = newField.length
+      const FIELD_WIDTH = newField[0].length
+      
+      let hasChanges = true
+      let iterations = 0
+      const maxIterations = FIELD_HEIGHT // 無限ループ防止
+      
+      // 変化がなくなるまで繰り返し
+      while (hasChanges && iterations < maxIterations) {
+        hasChanges = false
+        iterations++
+        
+        // 下から上に向かって処理（重力のため）
+        for (let y = FIELD_HEIGHT - 1; y >= 0; y--) {
+          // 現在の行が空かチェック
+          const isCurrentRowEmpty = newField[y].every(cell => cell === null)
+          
+          if (isCurrentRowEmpty) {
+            // 空の行の上にあるブロックを探して下に落とす
+            for (let aboveY = y - 1; aboveY >= 0; aboveY--) {
+              const hasBlocksAbove = newField[aboveY].some(cell => cell !== null)
+              
+              if (hasBlocksAbove) {
+                // 上の行のブロックを現在の行に移動
+                for (let x = 0; x < FIELD_WIDTH; x++) {
+                  newField[y][x] = newField[aboveY][x]
+                  newField[aboveY][x] = null
+                }
+                hasChanges = true
+                break // 一つの行を落としたら次の空の行を処理
+              }
+            }
+          }
+        }
+      }
+      
+      state.field = newField
+      
+      // 統計更新
+      state.lines += 1
+      
+      console.log('Bottom row cleared with gravity, cost:', clearRowCost, 'remaining points:', state.pointSystem.totalPoints)
+    },
+    
     // デバッグ用アクション: スコアを直接設定
     setScore: (state, action: PayloadAction<number>) => {
       const oldScore = state.score
@@ -1088,7 +1163,8 @@ export const {
   updateNextPieces,
   resetHoldSlots,
   resetGame,
-  setScore
+  setScore,
+  clearBottomRow
 } = gameSlice.actions
 
 export default gameSlice.reducer
