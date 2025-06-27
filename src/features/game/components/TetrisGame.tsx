@@ -20,6 +20,7 @@ import FeverScoreEffect from './FeverScoreEffect'
 import DangerModeEffects from './DangerModeEffects'
 import LineClearEffect from '../effects/components/LineClearEffect'
 import { useEffectSystem } from '../effects/hooks/useEffectSystem'
+import type { SpinResult } from '@/types/spin'
 
 export default function TetrisGame() {
   const router = useRouter()
@@ -34,7 +35,7 @@ export default function TetrisGame() {
 
   // 演出コールバックをReduxストアに設定
   React.useEffect(() => {
-    setLineClearCallback((linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean, spinResult?: any) => {
+    setLineClearCallback((linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean, spinResult?: SpinResult | null) => {
       triggerEffect(linesCleared, score, isTSpin, isPerfectClear, spinResult)
     })
   }, [triggerEffect])

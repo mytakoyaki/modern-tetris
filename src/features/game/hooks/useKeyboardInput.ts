@@ -177,7 +177,7 @@ export const useKeyboardInput = (
         repeatTimer: null
       })
     }
-  }, [isEnabled, keyBindings, executeAction])
+  }, [isEnabled, keyBindings, executeAction, callbacks])
 
   // キーアップハンドラー
   const handleKeyUp = useCallback((event: KeyboardEvent) => {

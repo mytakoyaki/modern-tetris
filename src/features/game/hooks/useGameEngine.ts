@@ -75,6 +75,39 @@ export const useGameEngine = () => {
     }
   }, [])
 
+  // 純Redux-based ゲームループ
+  const gameLoop = useCallback((currentTime: number) => {
+    // 最新のゲーム状態を取得
+    const currentGameState = store.getState().game
+    
+    if (!currentGameState.isGameRunning || currentGameState.isPaused) {
+      return
+    }
+
+    const deltaTime = currentTime - lastTimeRef.current
+    lastTimeRef.current = currentTime
+
+    // Redux自動落下タイマー更新（自動ロック処理含む）
+    dispatchRef.current(updateDropTimer(deltaTime))
+
+    // フィーバーモードタイマー更新
+    if (currentGameState.feverMode.isActive) {
+      dispatchRef.current(updateFeverTime(deltaTime))
+    }
+
+    // ローカルゲーム時間更新
+    localGameTimeRef.current += deltaTime
+
+    // 100msごとにReduxに同期（より滑らかな更新のため）
+    if (localGameTimeRef.current - lastSyncTimeRef.current >= 100) {
+      dispatchRef.current(updateGameTime(localGameTimeRef.current - lastSyncTimeRef.current))
+      lastSyncTimeRef.current = localGameTimeRef.current
+    }
+
+    // 次のフレーム
+    animationFrameRef.current = requestAnimationFrame(gameLoop)
+  }, []) // 依存関係を空にする
+
   // ゲーム状態の永続化
   useEffect(() => {
     // ゲーム状態をlocalStorageに保存
@@ -114,40 +147,49 @@ export const useGameEngine = () => {
         console.warn('Failed to restore game state:', error)
       }
     }
-  }, []) // 初回マウント時のみ実行
+  }, [gameLoop]) // gameLoopを依存関係に追加
 
-  // 純Redux-based ゲームループ
-  const gameLoop = useCallback((currentTime: number) => {
-    // 最新のゲーム状態を取得
-    const currentGameState = store.getState().game
+  // レベルゲージ用の独立したタイマー関数
+  const startLevelGaugeTimer = useCallback(() => {
+    if (levelGaugeTimerRef.current) {
+      clearInterval(levelGaugeTimerRef.current)
+    }
     
-    if (!currentGameState.isGameRunning || currentGameState.isPaused) {
-      return
+    levelGaugeRef.current = 0
+    levelGaugeTimerRef.current = setInterval(() => {
+      levelGaugeRef.current += 100 // 100msごとに増加
+      
+      // 30秒（30000ms）で1レベル
+      const currentLevel = Math.floor(levelGaugeRef.current / 30000) + 1
+      const currentLevelProgress = levelGaugeRef.current % 30000
+      
+      // レベルが変わった場合のみReduxを更新
+      if (currentLevel > gameState.level) {
+        dispatchRef.current(updateLevel(currentLevel))
+        // Redux内の落下速度も更新
+        const fallSpeeds: {[key: number]: number} = {
+          1: 1000, 2: 900, 3: 800, 4: 700, 5: 600,
+          6: 550, 7: 500, 8: 450, 9: 400, 10: 400,
+          11: 380, 12: 360, 13: 340, 14: 320, 15: 300,
+          16: 280, 17: 260, 18: 250, 19: 240, 20: 250,
+          21: 240, 22: 230, 23: 220, 24: 210, 25: 220,
+          26: 210, 27: 205, 28: 200, 29: 200, 30: 200
+        }
+        const newDropInterval = fallSpeeds[currentLevel] || 200
+        dispatchRef.current(updateDropInterval(newDropInterval))
+      }
+      
+      // レベルゲージの進捗をReduxに保存（新しいstateとして）
+      dispatchRef.current(updateLevelGaugeProgress(currentLevelProgress))
+    }, 100)
+  }, [gameState.level])
+
+  const stopLevelGaugeTimer = useCallback(() => {
+    if (levelGaugeTimerRef.current) {
+      clearInterval(levelGaugeTimerRef.current)
+      levelGaugeTimerRef.current = null
     }
-
-    const deltaTime = currentTime - lastTimeRef.current
-    lastTimeRef.current = currentTime
-
-    // Redux自動落下タイマー更新（自動ロック処理含む）
-    dispatchRef.current(updateDropTimer(deltaTime))
-
-    // フィーバーモードタイマー更新
-    if (currentGameState.feverMode.isActive) {
-      dispatchRef.current(updateFeverTime(deltaTime))
-    }
-
-    // ローカルゲーム時間更新
-    localGameTimeRef.current += deltaTime
-
-    // 100msごとにReduxに同期（より滑らかな更新のため）
-    if (localGameTimeRef.current - lastSyncTimeRef.current >= 100) {
-      dispatchRef.current(updateGameTime(localGameTimeRef.current - lastSyncTimeRef.current))
-      lastSyncTimeRef.current = localGameTimeRef.current
-    }
-
-    // 次のフレーム
-    animationFrameRef.current = requestAnimationFrame(gameLoop)
-  }, []) // 依存関係を空にする
+  }, [])
 
   // ゲーム開始（完全Redux-based）
   const handleStartGame = useCallback(() => {
@@ -190,7 +232,7 @@ export const useGameEngine = () => {
     
     // レベルゲージタイマーを開始
     startLevelGaugeTimer()
-  }, [gameLoop])
+  }, [gameLoop, startLevelGaugeTimer])
 
   // ゲーム停止
   const handleStopGame = useCallback(() => {
@@ -213,7 +255,7 @@ export const useGameEngine = () => {
     dispatchRef.current(endGame())
     // ゲーム終了時にlocalStorageをクリア
     localStorage.removeItem('tetris-game-state')
-  }, [])
+  }, [stopLevelGaugeTimer])
 
   // 純Redux移動処理
   const handleMoveLeft = useCallback(() => {
@@ -339,7 +381,7 @@ export const useGameEngine = () => {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [])
+  }, [gameLoop])
 
   // ゲーム開始時のループ開始
   useEffect(() => {
@@ -352,7 +394,7 @@ export const useGameEngine = () => {
       cancelAnimationFrame(animationFrameRef.current)
       animationFrameRef.current = null
     }
-  }, [gameState.isGameRunning, gameState.isPaused, gameState.isGameOver, gameState.score, gameState.level])
+  }, [gameState.isGameRunning, gameState.isPaused, gameState.isGameOver, gameState.score, gameState.level, gameLoop])
 
   // HMRによる再マウント時のゲーム状態復元
   useEffect(() => {
@@ -364,49 +406,7 @@ export const useGameEngine = () => {
         animationFrameRef.current = requestAnimationFrame(gameLoop)
       }
     }
-  }, [gameState.isGameRunning, gameState.isPaused, gameLoop]) // 依存関係を追加
-
-  // レベルゲージ用の独立したタイマー関数
-  const startLevelGaugeTimer = useCallback(() => {
-    if (levelGaugeTimerRef.current) {
-      clearInterval(levelGaugeTimerRef.current)
-    }
-    
-    levelGaugeRef.current = 0
-    levelGaugeTimerRef.current = setInterval(() => {
-      levelGaugeRef.current += 100 // 100msごとに増加
-      
-      // 30秒（30000ms）で1レベル
-      const currentLevel = Math.floor(levelGaugeRef.current / 30000) + 1
-      const currentLevelProgress = levelGaugeRef.current % 30000
-      
-      // レベルが変わった場合のみReduxを更新
-      if (currentLevel > gameState.level) {
-        dispatchRef.current(updateLevel(currentLevel))
-        // Redux内の落下速度も更新
-        const fallSpeeds: {[key: number]: number} = {
-          1: 1000, 2: 900, 3: 800, 4: 700, 5: 600,
-          6: 550, 7: 500, 8: 450, 9: 400, 10: 400,
-          11: 380, 12: 360, 13: 340, 14: 320, 15: 300,
-          16: 280, 17: 260, 18: 250, 19: 240, 20: 250,
-          21: 240, 22: 230, 23: 220, 24: 210, 25: 220,
-          26: 210, 27: 205, 28: 200, 29: 200, 30: 200
-        }
-        const newDropInterval = fallSpeeds[currentLevel] || 200
-        dispatchRef.current(updateDropInterval(newDropInterval))
-      }
-      
-      // レベルゲージの進捗をReduxに保存（新しいstateとして）
-      dispatchRef.current(updateLevelGaugeProgress(currentLevelProgress))
-    }, 100)
-  }, [gameState.level])
-
-  const stopLevelGaugeTimer = useCallback(() => {
-    if (levelGaugeTimerRef.current) {
-      clearInterval(levelGaugeTimerRef.current)
-      levelGaugeTimerRef.current = null
-    }
-  }, [])
+  }, [gameState.isGameRunning, gameState.isPaused, gameLoop])
 
   return {
     startGame: handleStartGame,

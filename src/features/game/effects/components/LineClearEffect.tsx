@@ -3,8 +3,6 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Typography } from '@mui/material'
 import { motion } from 'framer-motion'
-import type { EffectState } from '../types/effects'
-import { formatSpinResultForEffect, formatSpinResult } from '../../utils/spinDetection'
 import type { SpinResult } from '@/types/spin'
 
 interface LineClearEffectProps {

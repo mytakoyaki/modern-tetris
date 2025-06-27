@@ -402,7 +402,7 @@ export const gameSlice = createSlice({
         }
       }
     },
-    rotateTetromino: (state, action: PayloadAction<{clockwise?: boolean}> = {type: 'rotateTetromino', payload: {}}) => {
+    rotateTetromino: (state, action: PayloadAction<{clockwise?: boolean}>) => {
       // currentPiece.typeがnullの場合は何もしない
       if (state.currentPiece.type) {
         const clockwise = action.payload.clockwise ?? true
@@ -521,7 +521,7 @@ export const gameSlice = createSlice({
     placeTetromino: (state) => {
       // 基本設置ポイント
       const placementPoints = calculatePointsGained('placement', 1)
-      let totalBlockPoints = placementPoints.total
+      const totalBlockPoints = placementPoints.total
       let dropBonus = 0
       
       // ソフトドロップポイント計算
@@ -766,7 +766,7 @@ export const gameSlice = createSlice({
           if (state.currentPiece.type) {
             // placeTetromino ロジックを実行（ブロック設置による総獲得ポイント記録）
             const placementPoints = calculatePointsGained('placement', 1)
-            let totalBlockPoints = placementPoints.total
+            const totalBlockPoints = placementPoints.total
             let dropBonus = 0
             
             // ソフトドロップポイント計算
@@ -1104,7 +1104,7 @@ export const gameSlice = createSlice({
       state.recentPointsGained.push(clearRowCostPoints)
       
       // 一番下の行を消去して重力を適用
-      let newField = state.field.map((row, index) => {
+      const newField = state.field.map((row, index) => {
         if (index === 19) {
           return Array(10).fill(null)
         }

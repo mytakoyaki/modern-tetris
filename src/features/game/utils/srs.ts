@@ -207,7 +207,9 @@ export function getKickData(
 ): Array<{ x: number, y: number }> {
   const kickKey = `${fromRotation}->${toRotation}` as keyof typeof SRS_KICK_TABLE
   const kickTable = tetrominoType === 'I' ? SRS_I_KICK_TABLE : SRS_KICK_TABLE
-  return kickTable[kickKey] || [{ x: 0, y: 0 }]
+  const kicks = kickTable[kickKey] || [{ x: 0, y: 0 }]
+  // Convert readonly arrays to mutable arrays
+  return kicks.map(kick => ({ x: kick.x, y: kick.y }))
 }
 
 /**
