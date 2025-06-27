@@ -1,12 +1,11 @@
 'use client'
 
 import React from 'react'
-import { Box, Typography, Paper, Button, Grid } from '@mui/material'
+import { Box, Typography, Paper, Button } from '@mui/material'
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from '@/store/store'
 import { exchangePiece } from '@/store/slices/gameSlice'
 
-const PIECE_TYPES: ('I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L')[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L']
 
 const PIECE_COLORS = {
   'I': '#00ffff',

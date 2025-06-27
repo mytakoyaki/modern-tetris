@@ -214,7 +214,7 @@ export function getKickData(
  * T-Spin検出用のSRS拡張ウォールキック判定
  * T-Spinは特定のキックパターンでのみ発生する
  */
-export function isTSpinEligibleKick(kickIndex: number, fromRotation: number, toRotation: number): boolean {
+export function isTSpinEligibleKick(kickIndex: number, _fromRotation: number, _toRotation: number): boolean {
   // T-Spinが発生するキックパターンの定義
   // 通常、キックインデックス3または4（最後の2つのキック）でT-Spinが発生
   return kickIndex >= 3

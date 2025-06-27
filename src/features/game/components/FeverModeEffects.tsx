@@ -19,7 +19,7 @@ interface Particle {
   rotationSpeed: number
 }
 
-export default function FeverModeEffects() {
+const FeverModeEffects = React.memo(() => {
   const { feverMode } = useSelector((state: RootState) => state.game)
   const [particles, setParticles] = useState<Particle[]>([])
   const [activationStage, setActivationStage] = useState(0) // 0: inactive, 1-5: stages
@@ -85,7 +85,7 @@ export default function FeverModeEffects() {
         setShowFlash(false)
       }, 1200)
     }
-  }, [feverMode.isActive, wasActive])
+  }, [feverMode.isActive, wasActive, activationStage])
 
   useEffect(() => {
     if ((!feverMode.isActive && !isEnding) || activationStage < 3) {
@@ -110,19 +110,20 @@ export default function FeverModeEffects() {
           return updatedParticles
         }
 
-        // 新しいパーティクル追加（最大3個に制限・軽量化）
-        if (updatedParticles.length < 3) {
+        // 新しいパーティクル追加（最大2個に制限・大幅軽量化）
+        if (updatedParticles.length < 2) {
           const newParticles = [{
             id: Date.now(),
             x: Math.random() * window.innerWidth,
             y: window.innerHeight + 10,
-            vx: (Math.random() - 0.5) * 1,
-            vy: -(Math.random() * 0.5 + 0.5),
-            life: 60 + Math.random() * 40, // 短縮（1-1.7秒）
-            maxLife: 100,
-            color: '#FFD700', // 単一色で軽量化
+            vx: (Math.random() - 0.5) * 0.5, // 速度を下げる
+            vy: -(Math.random() * 0.3 + 0.3), // 速度を下げる
+            life: 40 + Math.random() * 20, // 短縮（0.8-1.2秒）
+            maxLife: 60,
+            color: '#FFD700',
             size: 1,
             rotation: 0,
+            rotationSpeed: 0,
           }]
           
           return [...updatedParticles, ...newParticles]
@@ -130,7 +131,7 @@ export default function FeverModeEffects() {
 
         return updatedParticles
       })
-    }, 200) // 200ms間隔で軽量化
+    }, 300) // 300ms間隔で大幅軽量化
 
     return () => clearInterval(interval)
   }, [feverMode.isActive, isEnding, activationStage])
@@ -381,4 +382,8 @@ export default function FeverModeEffects() {
       )}
     </Box>
   )
-}
+})
+
+FeverModeEffects.displayName = 'FeverModeEffects'
+
+export default FeverModeEffects

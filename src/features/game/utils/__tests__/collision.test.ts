@@ -5,7 +5,6 @@ import {
   canMoveTetromino,
   canRotateTetromino,
   isTetrominoLanded,
-  getHardDropPosition,
   getCompletedLines,
   clearLines,
   isGameOver,

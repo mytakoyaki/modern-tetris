@@ -4,9 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { Box, Paper } from '@mui/material'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store/store'
-import { Tetromino } from '../utils/tetromino'
 import { TETROMINO_TYPES } from '@/types/game'
-import SpinDisplay from './SpinDisplay'
 
 interface GameFieldProps {
   width?: number
@@ -17,7 +15,7 @@ const GRID_WIDTH = 10
 const GRID_HEIGHT = 20
 const CELL_SIZE = 32
 
-export default function GameField({ width, height }: GameFieldProps) {
+const GameField = React.memo<GameFieldProps>(({ width, height }) => {
   const { field, isGameRunning, currentPiece } = useSelector((state: RootState) => state.game)
   const [fieldSize, setFieldSize] = useState({ width: 336, height: 656 })
   
@@ -120,6 +118,22 @@ export default function GameField({ width, height }: GameFieldProps) {
     return newField
   }, [field, currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.rotation])
 
+  // 色マッピングを事前定義（毎回の計算を回避）
+  const cellColors = React.useMemo(() => ({
+    1: '#00f5ff', // I piece - cyan
+    2: '#ffd700', // O piece - yellow
+    3: '#a020f0', // T piece - purple
+    4: '#00ff00', // S piece - green
+    5: '#ff0000', // Z piece - red
+    6: '#0000ff', // J piece - blue
+    7: '#ff8c00', // L piece - orange
+  }), [])
+
+  const getCellColor = React.useCallback((cellValue: number | null) => {
+    if (cellValue === null || cellValue === 0) return 'transparent'
+    return cellColors[cellValue as keyof typeof cellColors] || '#666'
+  }, [cellColors])
+
   // セルレンダリング（最適化版：メモ化とGPU加速）
   const renderCell = React.useCallback((row: number, col: number) => {
     const cellValue = displayField[row][col]
@@ -158,23 +172,7 @@ export default function GameField({ width, height }: GameFieldProps) {
         }}
       />
     )
-  }, [cellSize, displayField])
-
-  // 色マッピングを事前定義（毎回の計算を回避）
-  const cellColors = React.useMemo(() => ({
-    1: '#00f5ff', // I piece - cyan
-    2: '#ffd700', // O piece - yellow
-    3: '#a020f0', // T piece - purple
-    4: '#00ff00', // S piece - green
-    5: '#ff0000', // Z piece - red
-    6: '#0000ff', // J piece - blue
-    7: '#ff8c00', // L piece - orange
-  }), [])
-
-  const getCellColor = React.useCallback((cellValue: number | null) => {
-    if (cellValue === null || cellValue === 0) return 'transparent'
-    return cellColors[cellValue as keyof typeof cellColors] || '#666'
-  }, [cellColors])
+  }, [cellSize, displayField, getCellColor])
 
   // currentPieceは表示フィールドに含まれるので別途描画不要
 
@@ -233,9 +231,6 @@ export default function GameField({ width, height }: GameFieldProps) {
       </Box>
       {/* currentPieceは表示フィールドに含まれる */}
       
-      {/* Spin display overlay */}
-      <SpinDisplay />
-      
       {!isGameRunning && (
         <Box
           sx={{
@@ -266,4 +261,8 @@ export default function GameField({ width, height }: GameFieldProps) {
       )}
     </Paper>
   )
-}
+})
+
+GameField.displayName = 'GameField'
+
+export default GameField

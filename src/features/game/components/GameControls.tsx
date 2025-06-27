@@ -1,21 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { Box, Button, Paper, Typography } from '@mui/material'
-import type { RootState } from '@/store/store'
-import { 
-  startGame, 
-  pauseGame, 
-  spawnTetromino, 
-  moveTetromino, 
-  rotateTetromino,
-  hardDropTetromino,
-  placeTetromino,
-  resetGame
-} from '@/store/slices/gameSlice'
-import { isTetrominoLanded } from '../utils/collision'
-import { Tetromino } from '../utils/tetromino'
+import React from 'react'
 
 export default function GameControls() {
   // このコンポーネントはuseGameEngineと競合するため一時的に無効化

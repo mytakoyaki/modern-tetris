@@ -2,7 +2,10 @@
 
 import React, { useEffect, useState } from 'react'
 import { Box, Typography } from '@mui/material'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
+import type { EffectState } from '../types/effects'
+import { formatSpinResultForEffect, formatSpinResult } from '../../utils/spinDetection'
+import type { SpinResult } from '@/types/spin'
 
 interface LineClearEffectProps {
   type: 'single' | 'double' | 'triple' | 'tetris' | 'tspin' | 'perfect'
@@ -10,12 +13,13 @@ interface LineClearEffectProps {
   score: number
   isVisible: boolean
   onComplete: () => void
+  spinResult?: SpinResult | null
 }
 
-// 演出設定
+// 演出設定（軽量化版）
 const EFFECT_CONFIG = {
   single: {
-    duration: 800,
+    duration: 600, // 短縮
     intensity: 'subtle',
     elements: ['lineGlow', 'particleBurst', 'scorePop'],
     colors: ['#00ff88'],
@@ -23,57 +27,57 @@ const EFFECT_CONFIG = {
     scale: 1.0
   },
   double: {
-    duration: 1000,
+    duration: 800, // 短縮
     intensity: 'subtle',
     elements: ['lineGlow', 'particleBurst', 'scorePop', 'colorWave'],
     colors: ['#00ff88', '#00cc6a'],
-    shake: 2,
-    scale: 1.05
+    shake: 1, // 軽減
+    scale: 1.02
   },
   triple: {
-    duration: 1200,
+    duration: 1000, // 短縮
     intensity: 'moderate',
     elements: ['lineExplosion', 'screenShake', 'colorWave', 'particleStorm'],
-    colors: ['#00ff88', '#ffd700', '#ff8c00'],
-    shake: 5,
-    scale: 1.1
+    colors: ['#00ff88', '#00cc6a', '#00994d'],
+    shake: 2, // 軽減
+    scale: 1.05
   },
   tetris: {
-    duration: 2000,
+    duration: 1500, // 短縮
     intensity: 'spectacular',
-    elements: ['rainbowExplosion', 'screenFlash', 'tetrisLogo', 'soundWave', 'particleCascade'],
-    colors: ['#00ff88', '#ffd700', '#ff8c00', '#ff6b6b', '#4ecdc4'],
-    shake: 8,
-    scale: 1.15
+    elements: ['rainbowEffect', 'tetrisLogo', 'screenShake', 'particleStorm'],
+    colors: ['#ffd700', '#ff8c00', '#ff4500', '#ff1493'],
+    shake: 3, // 軽減
+    scale: 1.1
   },
   tspin: {
-    duration: 2500,
+    duration: 1800, // 短縮
     intensity: 'legendary',
-    elements: ['spiralEffect', 'goldenAura', 'spinAnimation', 'technicalDisplay'],
-    colors: ['#ffd700', '#ff8c00', '#ff4500'],
-    shake: 6,
-    scale: 1.12
+    elements: ['goldenVortex', 'rotationEffect', 'screenShake', 'particleStorm'],
+    colors: ['#ffd700', '#ffa500', '#ff8c00'],
+    shake: 4, // 軽減
+    scale: 1.15
   },
   perfect: {
-    duration: 3500,
+    duration: 2500, // 短縮
     intensity: 'mythical',
-    elements: ['fullScreenExplosion', 'timeSlow', 'divineLight', 'achievementUnlock'],
-    colors: ['#8a2be2', '#ffd700', '#00ff88', '#ff6b6b'],
-    shake: 10,
+    elements: ['fullScreenExplosion', 'timeSlow', 'particleStorm'],
+    colors: ['#ffd700', '#ff1493', '#00ffff', '#ff4500'],
+    shake: 5, // 軽減
     scale: 1.2
   }
 }
 
 export default function LineClearEffect({ 
   type, 
-  lines, 
+  lines: _lines, 
   score, 
   isVisible, 
-  onComplete 
+  onComplete,
+  spinResult
 }: LineClearEffectProps) {
-  const [stage, setStage] = useState(0)
   // 安定したeffectIDを使用（propsから受け取る想定）
-  const [effectId] = useState(() => `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`)
+  const [effectId] = useState(() => `${type}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`)
   const config = EFFECT_CONFIG[type]
 
   useEffect(() => {
@@ -87,6 +91,34 @@ export default function LineClearEffect({
   }, [isVisible, config.duration, onComplete])
 
   if (!isVisible) return null
+
+  // T-Spinの詳細表示用テキスト
+  const getTSpinDisplayText = () => {
+    if (type !== 'tspin' || !spinResult) return 'Ｔ－ＳＰＩＮ！'
+    
+    if (spinResult.type === 'T-Spin') {
+      if (spinResult.variant === 'Mini') {
+        return `Ｔ－ＳＰＩＮ　ＭＩＮＩ！`
+      }
+      return `Ｔ－ＳＰＩＮ！`
+    }
+    
+    if (spinResult.type === 'SZ-Spin') {
+      return `ＳＺ－ＳＰＩＮ！`
+    }
+    
+    if (spinResult.type === 'I-Spin') {
+      return `Ｉ－ＳＰＩＮ！`
+    }
+    
+    if (spinResult.type === 'JL-Spin') {
+      return `ＪＬ－ＳＰＩＮ！`
+    }
+    
+    return 'Ｔ－ＳＰＩＮ！'
+  }
+
+  const tspinText = getTSpinDisplayText()
 
   return (
     <Box
@@ -108,13 +140,52 @@ export default function LineClearEffect({
         backfaceVisibility: 'hidden'
       }}
     >
-      {/* ライン消去種別表示 */}
+      {/* サイバーライン光る演出 */}
       <motion.div
-        key={`line-type-${effectId}`}
-        initial={{ opacity: 0, scale: 0.5, y: -30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.5, y: 30 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
+        key={`cyber-lines-${effectId}`}
+        initial={{ opacity: 0, scaleX: 0 }}
+        animate={{ opacity: 1, scaleX: 1 }}
+        exit={{ opacity: 0, scaleX: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate3d(-50%, -50%, 0)',
+          pointerEvents: 'none',
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden'
+        }}
+      >
+        {/* 水平ライン */}
+        <Box
+          sx={{
+            width: '400px',
+            height: '2px',
+            background: `linear-gradient(90deg, transparent 0%, ${config.colors[0]} 50%, transparent 100%)`,
+            boxShadow: `0 0 10px ${config.colors[0]}, 0 0 20px ${config.colors[0]}`,
+            position: 'relative',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: '-1px',
+              left: '0',
+              width: '100%',
+              height: '4px',
+              background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.8) 50%, transparent 100%)`,
+              filter: 'blur(1px)'
+            }
+          }}
+        />
+      </motion.div>
+
+      {/* サイバー文字演出 */}
+      <motion.div
+        key={`cyber-text-${effectId}`}
+        initial={{ opacity: 0, scale: 0.3, rotateX: -90 }}
+        animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+        exit={{ opacity: 0, scale: 1.2, rotateX: 90 }}
+        transition={{ duration: 0.5, ease: 'backOut' }}
         style={{
           position: 'absolute',
           top: '35%',
@@ -122,34 +193,98 @@ export default function LineClearEffect({
           transform: 'translate3d(-50%, -50%, 0)',
           pointerEvents: 'none',
           willChange: 'transform, opacity, scale',
-          backfaceVisibility: 'hidden'
+          backfaceVisibility: 'hidden',
+          perspective: '1000px'
         }}
       >
         <Typography
-          variant="h2"
+          variant="h1"
           sx={{
             color: config.colors[0],
-            fontWeight: 'bold',
-            textShadow: `0 0 20px ${config.colors[0]}, 0 0 40px ${config.colors[0]}`,
-            fontFamily: 'Consolas, monospace',
-            fontSize: '2.5rem',
+            fontWeight: '900',
+            fontFamily: 'Impact, "Arial Black", sans-serif',
+            fontSize: '3rem',
             textAlign: 'center',
             whiteSpace: 'nowrap',
             textTransform: 'uppercase',
-            // GPU加速のためのテキスト最適化
+            letterSpacing: '0.1em',
+            // サイバー文字エフェクト
+            textShadow: `
+              0 0 5px #fff,
+              0 0 10px ${config.colors[0]},
+              0 0 20px ${config.colors[0]},
+              0 0 40px ${config.colors[0]},
+              0 0 80px ${config.colors[0]}
+            `,
+            background: `linear-gradient(45deg, ${config.colors[0]}, #fff, ${config.colors[0]})`,
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            // 次世代グロー効果
+            filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))',
+            // GPU最適化
             willChange: 'transform, opacity',
             transform: 'translate3d(0, 0, 0)',
             backfaceVisibility: 'hidden',
-            textRendering: 'optimizeSpeed'
+            textRendering: 'optimizeSpeed',
+            // ホログラム効果
+            '&::before': {
+              content: `"${type === 'single' ? 'ＳＩＮＧＬＥ' : 
+                             type === 'double' ? 'ＤＯＵＢＬＥ' : 
+                             type === 'triple' ? 'ＴＲＩＰＬＥ' : 
+                             type === 'tetris' ? 'ＴＥＴＲＩＳ！' : 
+                             type === 'tspin' ? tspinText : 
+                             type === 'perfect' ? 'ＰＥＲＦＥＣＴ！' : 'ＥＦＦＥＣＴ'}"`,
+              position: 'absolute',
+              top: '2px',
+              left: '2px',
+              color: 'rgba(0, 255, 255, 0.3)',
+              zIndex: -1
+            }
           }}
         >
-          {type === 'single' ? 'SINGLE' : 
-           type === 'double' ? 'DOUBLE' : 
-           type === 'triple' ? 'TRIPLE' : 
-           type === 'tetris' ? 'TETRIS!' : 
-           type === 'tspin' ? 'T-SPIN!' : 
-           type === 'perfect' ? 'PERFECT!' : type.toUpperCase()}
+          {type === 'single' ? 'ＳＩＮＧＬＥ' : 
+           type === 'double' ? 'ＤＯＵＢＬＥ' : 
+           type === 'triple' ? 'ＴＲＩＰＬＥ' : 
+           type === 'tetris' ? 'ＴＥＴＲＩＳ！' : 
+           type === 'tspin' ? tspinText : 
+           type === 'perfect' ? 'ＰＥＲＦＥＣＴ！' : 'ＥＦＦＥＣＴ'}
         </Typography>
+      </motion.div>
+
+      {/* ヘキサゴン装飾 */}
+      <motion.div
+        key={`hexagon-${effectId}`}
+        initial={{ opacity: 0, rotate: 0, scale: 0 }}
+        animate={{ opacity: 0.6, rotate: 360, scale: 1 }}
+        exit={{ opacity: 0, rotate: 720, scale: 2 }}
+        transition={{ duration: config.duration / 1000, ease: 'easeOut' }}
+        style={{
+          position: 'absolute',
+          top: '35%',
+          left: '50%',
+          transform: 'translate3d(-50%, -50%, 0)',
+          pointerEvents: 'none',
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden'
+        }}
+      >
+        <Box
+          sx={{
+            width: '150px',
+            height: '150px',
+            border: `2px solid ${config.colors[0]}`,
+            borderRadius: '0',
+            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+            boxShadow: `
+              0 0 20px ${config.colors[0]},
+              inset 0 0 20px rgba(255,255,255,0.1)
+            `,
+            willChange: 'transform, opacity',
+            transform: 'translate3d(0, 0, 0)',
+            backfaceVisibility: 'hidden'
+          }}
+        />
       </motion.div>
 
       {/* パーティクル効果 */}
@@ -168,16 +303,20 @@ export default function LineClearEffect({
   )
 }
 
-// パーティクル効果コンポーネント
-function ParticleEffect({ type, config, effectId }: { type: string, config: any, effectId: string }) {
-  // パーティクル数を大幅に削減
-  const particleCount = type === 'perfect' ? 12 : type === 'tetris' ? 10 : type === 'tspin' ? 8 : 6
+// サイバーパーティクル効果コンポーネント
+function ParticleEffect({ type, config, effectId }: { 
+  type: string, 
+  config: { colors: string[], duration: number } & Record<string, unknown>, 
+  effectId: string 
+}) {
+  // パーティクル数を削減
+  const particleCount = type === 'perfect' ? 8 : type === 'tetris' ? 6 : type === 'tspin' ? 5 : 4
   
   return (
     <div style={{ 
       position: 'absolute', 
       pointerEvents: 'none',
-      top: '40%',
+      top: '35%',
       left: '50%',
       transform: 'translate3d(-50%, -50%, 0)',
       width: '200px',
@@ -185,131 +324,379 @@ function ParticleEffect({ type, config, effectId }: { type: string, config: any,
       willChange: 'transform, opacity',
       backfaceVisibility: 'hidden'
     }}>
-      {Array.from({ length: particleCount }).map((_, i) => (
-        <motion.div
-          key={`particle-${effectId}-${i}`}
-          initial={{ 
-            opacity: 0.8, 
-            scale: 0,
-            x: 0,
-            y: 0
-          }}
-          animate={{ 
-            opacity: 0, 
-            scale: 1.5,
-            x: (Math.random() - 0.5) * 200,
-            y: (Math.random() - 0.5) * 200
-          }}
-          transition={{ 
-            duration: config.duration / 1200,
-            delay: Math.random() * 0.2,
-            ease: 'easeOut'
-          }}
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            willChange: 'transform, opacity',
-            backfaceVisibility: 'hidden'
-          }}
-        >
-          <Box
-            sx={{
-              width: '3px',
-              height: '3px',
-              background: config.colors[Math.floor(Math.random() * config.colors.length)],
-              borderRadius: '50%',
-              boxShadow: `0 0 6px ${config.colors[0]}`,
-              transform: 'translate3d(-50%, -50%, 0)',
+      {Array.from({ length: particleCount }).map((_, i) => {
+        const angle = (i / particleCount) * Math.PI * 2
+        const distance = 80 + Math.random() * 60
+        return (
+          <motion.div
+            key={`cyber-particle-${effectId}-${i}`}
+            initial={{ 
+              opacity: 0,
+              scale: 0,
+              x: 0,
+              y: 0,
+              rotate: 0
+            }}
+            animate={{ 
+              opacity: [0, 1, 0],
+              scale: [0, 1, 0],
+              x: Math.cos(angle) * distance,
+              y: Math.sin(angle) * distance,
+              rotate: 360
+            }}
+            transition={{ 
+              duration: config.duration / 1200,
+              delay: i * 0.05,
+              ease: 'easeOut'
+            }}
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
               willChange: 'transform, opacity',
               backfaceVisibility: 'hidden'
             }}
-          />
-        </motion.div>
-      ))}
+          >
+            {/* サイバー風パーティクル（ひし形） */}
+            <Box
+              sx={{
+                width: '4px',
+                height: '4px',
+                background: `linear-gradient(45deg, ${config.colors[0]}, #fff, ${config.colors[0]})`,
+                clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                boxShadow: `
+                  0 0 8px ${config.colors[0]},
+                  0 0 16px ${config.colors[0]},
+                  inset 0 0 4px rgba(255,255,255,0.8)
+                `,
+                transform: 'translate3d(-50%, -50%, 0)',
+                willChange: 'transform, opacity',
+                backfaceVisibility: 'hidden',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: '-1px',
+                  left: '-1px',
+                  right: '-1px',
+                  bottom: '-1px',
+                  background: `linear-gradient(45deg, transparent, ${config.colors[0]}, transparent)`,
+                  clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                  zIndex: -1,
+                  filter: 'blur(1px)'
+                }
+              }}
+            />
+          </motion.div>
+        )
+      })}
+      
+      {/* 中央発光コア */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0] }}
+        transition={{ duration: config.duration / 1000, ease: 'easeOut' }}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate3d(-50%, -50%, 0)',
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden'
+        }}
+      >
+        <Box
+          sx={{
+            width: '12px',
+            height: '12px',
+            background: `radial-gradient(circle, #fff 0%, ${config.colors[0]} 70%, transparent 100%)`,
+            borderRadius: '50%',
+            boxShadow: `
+              0 0 20px ${config.colors[0]},
+              0 0 40px ${config.colors[0]},
+              0 0 60px rgba(255,255,255,0.5)
+            `,
+            willChange: 'transform, opacity',
+            transform: 'translate3d(0, 0, 0)',
+            backfaceVisibility: 'hidden'
+          }}
+        />
+      </motion.div>
     </div>
   )
 }
 
-// スコア表示コンポーネント
-function ScoreDisplay({ score, type, config, effectId }: { score: number, type: string, config: any, effectId: string }) {
+// サイバースコア表示コンポーネント
+function ScoreDisplay({ score, type: _type, config, effectId }: { 
+  score: number, 
+  type: string, 
+  config: { colors: string[], duration: number } & Record<string, unknown>, 
+  effectId: string 
+}) {
   return (
     <motion.div
-      key={`score-${effectId}`}
-      initial={{ opacity: 0, y: 30, scale: 0.8 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -30, scale: 1.2 }}
-      transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+      key={`cyber-score-${effectId}`}
+      initial={{ opacity: 0, y: 50, scale: 0.5, rotateY: -180 }}
+      animate={{ opacity: 1, y: 0, scale: 1, rotateY: 0 }}
+      exit={{ opacity: 0, y: -50, scale: 1.5, rotateY: 180 }}
+      transition={{ duration: 0.8, delay: 0.4, ease: 'backOut' }}
       style={{
         position: 'absolute',
-        top: '55%',
+        top: '60%',
         left: '50%',
         transform: 'translate3d(-50%, -50%, 0)',
         pointerEvents: 'none',
         willChange: 'transform, opacity, scale',
-        backfaceVisibility: 'hidden'
+        backfaceVisibility: 'hidden',
+        perspective: '1000px'
       }}
     >
-      <Typography
-        variant="h4"
+      {/* スコア背景パネル */}
+      <Box
         sx={{
-          color: config.colors[1] || config.colors[0],
-          fontWeight: 'bold',
-          textShadow: `0 0 15px ${config.colors[1] || config.colors[0]}, 0 0 30px ${config.colors[0]}`,
-          fontFamily: 'Consolas, monospace',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate3d(-50%, -50%, 0)',
+          width: 'auto',
+          minWidth: '120px',
+          height: '40px',
+          background: `linear-gradient(45deg, 
+            rgba(${config.colors[0] === '#00ff88' ? '0,255,136' : '255,215,0'}, 0.1) 0%, 
+            rgba(${config.colors[0] === '#00ff88' ? '0,255,136' : '255,215,0'}, 0.2) 50%, 
+            rgba(${config.colors[0] === '#00ff88' ? '0,255,136' : '255,215,0'}, 0.1) 100%)`,
+          border: `1px solid ${config.colors[0]}`,
+          borderRadius: '0',
+          clipPath: 'polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)',
+          boxShadow: `
+            0 0 20px ${config.colors[0]},
+            inset 0 0 10px rgba(255,255,255,0.1)
+          `,
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: '2px',
+            left: '2px',
+            right: '2px',
+            bottom: '2px',
+            background: `linear-gradient(45deg, transparent, ${config.colors[0]}, transparent)`,
+            clipPath: 'polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)',
+            opacity: 0.3,
+            filter: 'blur(1px)'
+          }
+        }}
+      />
+      
+      {/* スコアテキスト */}
+      <Typography
+        variant="h3"
+        sx={{
+          position: 'relative',
+          color: '#fff',
+          fontWeight: '900',
+          fontFamily: 'Impact, "Arial Black", sans-serif',
           textAlign: 'center',
           whiteSpace: 'nowrap',
-          fontSize: '2rem',
-          // GPU加速のためのテキスト最適化
+          fontSize: '1.8rem',
+          lineHeight: '40px',
+          letterSpacing: '0.05em',
+          // サイバースコアエフェクト
+          textShadow: `
+            0 0 5px #fff,
+            0 0 10px ${config.colors[0]},
+            0 0 20px ${config.colors[0]},
+            0 0 30px ${config.colors[0]}
+          `,
+          background: `linear-gradient(90deg, ${config.colors[0]}, #fff, ${config.colors[0]})`,
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.6))',
+          // GPU最適化
           willChange: 'transform, opacity',
           transform: 'translate3d(0, 0, 0)',
           backfaceVisibility: 'hidden',
-          textRendering: 'optimizeSpeed'
+          textRendering: 'optimizeSpeed',
+          // ホログラム効果
+          '&::before': {
+            content: `"+${score.toLocaleString()}"`,
+            position: 'absolute',
+            top: '1px',
+            left: '1px',
+            color: 'rgba(0, 255, 255, 0.2)',
+            zIndex: -1
+          }
         }}
       >
         +{score.toLocaleString()}
       </Typography>
+      
+      {/* 左右のエネルギーバー */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '-30px',
+          transform: 'translate3d(0, -50%, 0)',
+          width: '4px',
+          height: '50px',
+          background: `linear-gradient(180deg, transparent 0%, ${config.colors[0]} 50%, transparent 100%)`,
+          boxShadow: `0 0 10px ${config.colors[0]}`,
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden'
+        }}
+      />
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          right: '-30px',
+          transform: 'translate3d(0, -50%, 0)',
+          width: '4px',
+          height: '50px',
+          background: `linear-gradient(180deg, transparent 0%, ${config.colors[0]} 50%, transparent 100%)`,
+          boxShadow: `0 0 10px ${config.colors[0]}`,
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden'
+        }}
+      />
     </motion.div>
   )
 }
 
-// テトリス特殊効果
+// サイバーテトリス特殊効果
 function TetrisSpecialEffect({ effectId }: { effectId: string }) {
   return (
     <motion.div
-      key={`tetris-${effectId}`}
-      initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
-      animate={{ opacity: 1, scale: 1, rotate: 0 }}
-      exit={{ opacity: 0, scale: 1.5, rotate: 180 }}
-      transition={{ duration: 1.5, ease: 'easeOut' }}
+      key={`cyber-tetris-${effectId}`}
+      initial={{ opacity: 0, scale: 0.3, rotateZ: -180, rotateY: -90 }}
+      animate={{ opacity: 1, scale: 1, rotateZ: 0, rotateY: 0 }}
+      exit={{ opacity: 0, scale: 2, rotateZ: 180, rotateY: 90 }}
+      transition={{ duration: 2, ease: 'backOut' }}
       style={{
         position: 'absolute',
-        top: '40%',
+        top: '30%',
         left: '50%',
         transform: 'translate3d(-50%, -50%, 0)',
         pointerEvents: 'none',
         willChange: 'transform, opacity, scale',
-        backfaceVisibility: 'hidden'
+        backfaceVisibility: 'hidden',
+        perspective: '1000px'
       }}
     >
+      {/* ホログラム背景 */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate3d(-50%, -50%, 0)',
+          width: '300px',
+          height: '100px',
+          background: `linear-gradient(45deg, 
+            rgba(255, 215, 0, 0.1) 0%, 
+            rgba(255, 215, 0, 0.3) 50%, 
+            rgba(255, 215, 0, 0.1) 100%)`,
+          clipPath: 'polygon(20px 0%, 100% 0%, calc(100% - 20px) 100%, 0% 100%)',
+          border: '2px solid #ffd700',
+          boxShadow: `
+            0 0 30px #ffd700,
+            inset 0 0 20px rgba(255, 255, 255, 0.1)
+          `,
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: '4px',
+            left: '4px',
+            right: '4px',
+            bottom: '4px',
+            background: `linear-gradient(45deg, transparent, #ffd700, transparent)`,
+            clipPath: 'polygon(20px 0%, 100% 0%, calc(100% - 20px) 100%, 0% 100%)',
+            opacity: 0.4,
+            filter: 'blur(2px)'
+          }
+        }}
+      />
+      
+      {/* TETRIS! テキスト */}
       <Typography
         variant="h1"
         sx={{
+          position: 'relative',
           color: '#ffd700',
-          fontWeight: 'bold',
-          textShadow: '0 0 30px #ffd700, 0 0 60px #ff8c00',
-          fontFamily: 'Consolas, monospace',
+          fontWeight: '900',
+          fontFamily: 'Impact, "Arial Black", sans-serif',
           fontSize: '4rem',
           textAlign: 'center',
           whiteSpace: 'nowrap',
+          letterSpacing: '0.1em',
+          lineHeight: '100px',
+          // 次世代テトリスエフェクト
+          textShadow: `
+            0 0 10px #fff,
+            0 0 20px #ffd700,
+            0 0 40px #ffd700,
+            0 0 80px #ffd700,
+            0 0 160px #ff8c00
+          `,
+          background: `linear-gradient(45deg, #ffd700, #fff, #ffd700, #ff8c00)`,
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          filter: 'drop-shadow(0 0 15px rgba(255,255,255,0.8))',
+          // GPU最適化
           willChange: 'transform, opacity',
           transform: 'translate3d(0, 0, 0)',
           backfaceVisibility: 'hidden',
-          textRendering: 'optimizeSpeed'
+          textRendering: 'optimizeSpeed',
+          // サイバーホログラム効果
+          '&::before': {
+            content: '"ＴＥＴＲＩＳ！"',
+            position: 'absolute',
+            top: '3px',
+            left: '3px',
+            color: 'rgba(0, 255, 255, 0.4)',
+            zIndex: -1
+          }
         }}
       >
-        TETRIS!
+        ＴＥＴＲＩＳ！
       </Typography>
+      
+      {/* エネルギーコア */}
+      <motion.div
+        initial={{ scale: 0, rotate: 0 }}
+        animate={{ scale: [0, 1.2, 1], rotate: 360 }}
+        transition={{ duration: 1.5, ease: 'easeOut' }}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate3d(-50%, -50%, 0)',
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden'
+        }}
+      >
+        <Box
+          sx={{
+            width: '20px',
+            height: '20px',
+            background: `radial-gradient(circle, #fff 0%, #ffd700 50%, #ff8c00 100%)`,
+            borderRadius: '50%',
+            boxShadow: `
+              0 0 40px #ffd700,
+              0 0 80px #ffd700,
+              0 0 120px rgba(255, 215, 0, 0.5)
+            `,
+            willChange: 'transform, opacity',
+            transform: 'translate3d(0, 0, 0)',
+            backfaceVisibility: 'hidden'
+          }}
+        />
+      </motion.div>
     </motion.div>
   )
 }
@@ -428,31 +815,4 @@ function PerfectSpecialEffect({ effectId }: { effectId: string }) {
   )
 }
 
-// 画面振動効果
-function ScreenShake({ intensity, duration, effectId }: { intensity: number, duration: number, effectId: string }) {
-  if (intensity === 0) return null
-  
-  return (
-    <motion.div
-      key={`shake-${effectId}`}
-      initial={{ x: 0, y: 0 }}
-      animate={{ 
-        x: [0, intensity, -intensity, intensity, -intensity, 0],
-        y: [0, -intensity, intensity, -intensity, intensity, 0]
-      }}
-      transition={{ 
-        duration: duration / 1000,
-        ease: 'easeInOut',
-        repeat: 2
-      }}
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none'
-      }}
-    />
-  )
-} 
+ 

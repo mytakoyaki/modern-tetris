@@ -1,16 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { Tetromino } from '@/features/game/utils/tetromino'
 import { TETROMINO_TYPES } from '@/types/game'
 import { getLineClearCallback } from '../store'
-import { detectSpin, isBackToBackEligible } from '@/features/game/utils/spinDetection'
-import type { SpinResult } from '@/types/spin'
-import type { PointsState, PointsGained, ExchangeResult } from '@/types/points'
-import { POINTS_CONFIG, EXCHANGE_COSTS, FEVER_CONFIG } from '@/types/points'
+import { detectSpin } from '@/features/game/utils/spinDetection'
+import type { SpinResult, SpinDetectionContext } from '@/types/spin'
+import { Tetromino } from '@/features/game/utils/tetromino'
+import type { PointsState, PointsGained } from '@/types/points'
+import { FEVER_CONFIG } from '@/types/points'
 import type { Rank, RankProgress } from '@/types/rank'
 import { RANKS } from '@/types/rank'
 import { 
   calculatePointsGained, 
-  getCurrentExchangeCost, 
   getNextExchangeCost, 
   attemptExchange,
   resetExchangeCount,
@@ -18,7 +17,6 @@ import {
   getHoldCost
 } from '@/features/game/utils/pointsSystem'
 import { 
-  getCurrentRank, 
   calculateRankProgress, 
   checkPromotion,
   calculateRankBonus
@@ -70,23 +68,6 @@ function canPlacePiece(field: (number | null)[][], piece: {type: string | null, 
   return true
 }
 
-function generateFieldWithPiece(field: (number | null)[][], piece: {type: string | null, x: number, y: number, rotation: number}): (number | null)[][] {
-  // フィールドをコピー
-  const newField = field.map(row => [...row])
-  
-  if (!piece.type) return newField
-  
-  const blocks = getTetrominoBlocks(piece)
-  const pieceTypeNumber = Object.keys(TETROMINO_TYPES).indexOf(piece.type) + 1
-  
-  for (const block of blocks) {
-    if (block.y >= 0 && block.y < 20 && block.x >= 0 && block.x < 10) {
-      newField[block.y][block.x] = pieceTypeNumber
-    }
-  }
-  
-  return newField
-}
 
 function placePieceOnField(field: (number | null)[][], piece: {type: string | null, x: number, y: number, rotation: number}): (number | null)[][] {
   if (!piece.type) return field
@@ -193,6 +174,8 @@ export interface GameState {
   lastSpin: SpinResult | null
   backToBackCount: number
   comboCount: number
+  wasWallKick: boolean
+  kickIndex: number
   
   // Fever mode
   feverMode: {
@@ -250,6 +233,8 @@ const initialState: GameState = {
   lastSpin: null,
   backToBackCount: 0,
   comboCount: 0,
+  wasWallKick: false,
+  kickIndex: 0,
   feverMode: {
     isActive: false,
     timeRemaining: 0,
@@ -376,7 +361,7 @@ export const gameSlice = createSlice({
         }
       }
     },
-    rotateTetromino: (state, action: PayloadAction<{clockwise?: boolean}> = {payload: {}}) => {
+    rotateTetromino: (state, action: PayloadAction<{clockwise?: boolean}> = {type: 'rotateTetromino', payload: {}}) => {
       // currentPiece.typeがnullの場合は何もしない
       if (state.currentPiece.type) {
         const clockwise = action.payload.clockwise ?? true
@@ -403,6 +388,8 @@ export const gameSlice = createSlice({
             wasWallKick: false,
             kickIndex: 0
           }
+          state.wasWallKick = false
+          state.kickIndex = 0
         } else {
           // SRS Wall Kick試行（簡略版）
           const wallKickOffsets = [
@@ -438,6 +425,8 @@ export const gameSlice = createSlice({
                 wasWallKick: true,
                 kickIndex: i + 1
               }
+              state.wasWallKick = true
+              state.kickIndex = i + 1
               rotationSuccess = true
               break
             }
@@ -446,6 +435,8 @@ export const gameSlice = createSlice({
           if (!rotationSuccess) {
             // 回転失敗
             state.lastRotationKick = null
+            state.wasWallKick = false
+            state.kickIndex = 0
           }
         }
       }
@@ -555,21 +546,48 @@ export const gameSlice = createSlice({
         state.field = clearCompletedLines(newField, completedLines)
         state.lines += completedLines.length
         
-        // スコア計算（フィーバーモード考慮）
+        // スピン検出を実行
+        const tetromino = new Tetromino(state.currentPiece.type!, state.currentPiece.x, state.currentPiece.y)
+        tetromino.setRotation(state.currentPiece.rotation)
+        
+        const spinContext: SpinDetectionContext = {
+          tetromino,
+          lastAction: state.lastAction === 'rotate' ? 'rotate' : 'move',
+          field: newField.map(row => row.map(cell => cell || 0)), // number[][]に変換
+          wasWallKick: state.wasWallKick,
+          kickIndex: state.kickIndex
+        }
+        
+        const spinResult = detectSpin(spinContext, completedLines.length)
+        state.lastSpin = spinResult
+        
+        // スコア計算（スピンボーナス込み）
         const baseScore = [0, 100, 400, 1000, 2000][completedLines.length] || 0
+        let totalScore = baseScore
+        
+        // スピンボーナスを追加
+        if (spinResult.type && spinResult.bonus > 0) {
+          totalScore += spinResult.bonus
+          console.log(`[SPIN DETECTED] ${spinResult.type} ${spinResult.variant} - Bonus: ${spinResult.bonus} points`)
+        }
+        
+        // フィーバーモード倍率適用
         const multiplier = state.feverMode.isActive ? 4 : 1
-        const finalScore = baseScore * state.level * multiplier
+        
+        // レベルボーナス計算（最大6倍程度に軽減）
+        const levelMultiplier = Math.min(1 + (state.level - 1) * 0.2, 6.0)
+        
+        const finalScore = totalScore * levelMultiplier * multiplier
         state.score += finalScore
         
         // 演出コールバックを呼び出し
         const lineClearCallback = getLineClearCallback()
         if (lineClearCallback) {
-          // T-Spin判定（簡易版 - 実際の判定ロジックは別途実装が必要）
-          const isTSpin = state.lastAction === 'rotate' && completedLines.length > 0
-          // Perfect Clear判定（簡易版）
+          // Perfect Clear判定
           const isPerfectClear = state.field.every(row => row.every(cell => cell === null))
+          const isTSpin = spinResult.type === 'T-Spin'
           
-          lineClearCallback(completedLines.length, finalScore, isTSpin, isPerfectClear)
+          lineClearCallback(completedLines.length, finalScore, isTSpin, isPerfectClear, spinResult)
         }
       }
       
@@ -746,21 +764,48 @@ export const gameSlice = createSlice({
               state.field = clearCompletedLines(newField, completedLines)
               state.lines += completedLines.length
               
-              // スコア計算（フィーバーモード考慮）
+              // スピン検出を実行
+              const tetromino = new Tetromino(state.currentPiece.type!, state.currentPiece.x, state.currentPiece.y)
+              tetromino.setRotation(state.currentPiece.rotation)
+              
+              const spinContext: SpinDetectionContext = {
+                tetromino,
+                lastAction: state.lastAction === 'rotate' ? 'rotate' : 'move',
+                field: newField.map(row => row.map(cell => cell || 0)), // number[][]に変換
+                wasWallKick: state.wasWallKick,
+                kickIndex: state.kickIndex
+              }
+              
+              const spinResult = detectSpin(spinContext, completedLines.length)
+              state.lastSpin = spinResult
+              
+              // スコア計算（スピンボーナス込み）
               const baseScore = [0, 100, 400, 1000, 2000][completedLines.length] || 0
+              let totalScore = baseScore
+              
+              // スピンボーナスを追加
+              if (spinResult.type && spinResult.bonus > 0) {
+                totalScore += spinResult.bonus
+                console.log(`[SPIN DETECTED] ${spinResult.type} ${spinResult.variant} - Bonus: ${spinResult.bonus} points`)
+              }
+              
+              // フィーバーモード倍率適用
               const multiplier = state.feverMode.isActive ? 4 : 1
-              const finalScore = baseScore * state.level * multiplier
+              
+              // レベルボーナス計算（最大6倍程度に軽減）
+              const levelMultiplier = Math.min(1 + (state.level - 1) * 0.2, 6.0)
+              
+              const finalScore = totalScore * levelMultiplier * multiplier
               state.score += finalScore
               
               // 演出コールバックを呼び出し
               const lineClearCallback = getLineClearCallback()
               if (lineClearCallback) {
-                // T-Spin判定（簡易版 - 実際の判定ロジックは別途実装が必要）
-                const isTSpin = state.lastAction === 'rotate' && completedLines.length > 0
-                // Perfect Clear判定（簡易版）
+                // Perfect Clear判定
                 const isPerfectClear = state.field.every(row => row.every(cell => cell === null))
+                const isTSpin = spinResult.type === 'T-Spin'
                 
-                lineClearCallback(completedLines.length, finalScore, isTSpin, isPerfectClear)
+                lineClearCallback(completedLines.length, finalScore, isTSpin, isPerfectClear, spinResult)
               }
             }
             

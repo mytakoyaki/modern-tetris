@@ -3,13 +3,15 @@ import gameReducer from './slices/gameSlice'
 import userReducer from './slices/userSlice'
 import scoreReducer from './slices/scoreSlice'
 import achievementReducer from './slices/achievementSlice'
+import type { SpinResult } from '@/types/spin'
 
 // 演出コールバックの型定義
 export type LineClearCallback = (
   linesCleared: number, 
   score: number, 
   isTSpin: boolean, 
-  isPerfectClear: boolean
+  isPerfectClear: boolean,
+  spinResult?: SpinResult | null
 ) => void
 
 // ストア拡張用の型
@@ -34,12 +36,12 @@ export const store = configureStore({
 
 // 演出コールバックを設定する関数
 export const setLineClearCallback = (callback: LineClearCallback) => {
-  ;(store as any).lineClearCallback = callback
+  ;(store as unknown as { lineClearCallback: LineClearCallback }).lineClearCallback = callback
 }
 
 // 演出コールバックを取得する関数
 export const getLineClearCallback = (): LineClearCallback | null => {
-  return (store as any).lineClearCallback
+  return (store as unknown as { lineClearCallback?: LineClearCallback }).lineClearCallback || null
 }
 
 export type RootState = ReturnType<typeof store.getState>

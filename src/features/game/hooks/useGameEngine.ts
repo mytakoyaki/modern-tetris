@@ -10,15 +10,12 @@ import { store } from '@/store/store'
 import { 
   startGame, 
   endGame, 
-  updateScore,
   moveTetromino,
   rotateTetromino,
   hardDropTetromino,
   placeTetromino,
   lockTetromino,
   spawnNextTetromino,
-  updateField,
-  updateCurrentPiece,
   updateFeverTime,
   updateDropTimer,
   setSoftDropping,
@@ -51,7 +48,7 @@ export const useGameEngine = () => {
   
   // レベルゲージ用の独立したタイマー
   const levelGaugeRef = useRef<number>(0)
-  const levelGaugeTimerRef = useRef<any>(null)
+  const levelGaugeTimerRef = useRef<NodeJS.Timeout | null>(null)
   
   // ライン消去コールバック
   const onLineClearRef = useRef<((linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean) => void) | null>(null)

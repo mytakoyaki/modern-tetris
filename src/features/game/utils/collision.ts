@@ -102,11 +102,8 @@ export function getHardDropPosition(
   field: number[][]
 ): number {
   const cloned = tetromino.clone()
-  let dropDistance = 0
-  
   while (canMoveTetromino(cloned, 0, 1, field)) {
     cloned.moveDown()
-    dropDistance++
   }
   
   return cloned.y

@@ -140,7 +140,7 @@ export function resetExchangeCount(): number {
  * ポイント履歴用のフォーマット関数
  */
 export function formatPointsGained(pointsGained: PointsGained): string {
-  const { type, total, multiplier, basePoints, dropBonus } = pointsGained
+  const { type, total, multiplier } = pointsGained
 
   const typeNames = {
     placement: 'ブロック設置',

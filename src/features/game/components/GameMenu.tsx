@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Box, IconButton, Menu, MenuItem, Typography } from '@mui/material'
+import { IconButton, Menu, MenuItem, Typography } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import { Menu as MenuIcon, EmojiEvents, Settings, Home } from '@mui/icons-material'
 

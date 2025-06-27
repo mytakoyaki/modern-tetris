@@ -1,9 +1,8 @@
 'use client'
 
 import React from 'react'
-import { Box, Paper, Typography, Divider, Button } from '@mui/material'
+import { Box, Paper, Typography, Divider } from '@mui/material'
 import { useSelector } from 'react-redux'
-import { useRouter } from 'next/navigation'
 import type { RootState } from '@/store/store'
 import PointsDisplay from './PointsDisplay'
 import ExchangeControls from './ExchangeControls'
@@ -14,9 +13,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ position }: SidebarProps) {
-  const router = useRouter()
   const {
-    isGameRunning,
     score,
     level,
     lines,
@@ -38,18 +35,6 @@ export default function Sidebar({ position }: SidebarProps) {
     return (num ?? 0).toLocaleString()
   }
 
-  // 落下速度を取得する関数
-  const getDropSpeed = (level: number): number => {
-    const fallSpeeds = {
-      1: 1000,  2: 900,   3: 800,   4: 700,   5: 600,
-      6: 550,   7: 500,   8: 450,   9: 400,   10: 400,
-      11: 380,  12: 360,  13: 340,  14: 320,  15: 300,
-      16: 280,  17: 260,  18: 250,  19: 240,  20: 250,
-      21: 240,  22: 230,  23: 220,  24: 210,  25: 220,
-      26: 210,  27: 205,  28: 200,  29: 200,  30: 200
-    }
-    return fallSpeeds[level as keyof typeof fallSpeeds] || 200
-  }
 
   const renderHoldSlot = (index: number) => {
     const piece = holdSlots?.[index]

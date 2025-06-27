@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import type { SpinResult } from '@/types/spin'
 
 export type EffectType = 'single' | 'double' | 'triple' | 'tetris' | 'tspin' | 'perfect'
 
@@ -8,6 +9,7 @@ interface EffectState {
   score: number
   isVisible: boolean
   id: string
+  spinResult?: SpinResult | null
 }
 
 export function useEffectSystem() {
@@ -32,7 +34,8 @@ export function useEffectSystem() {
     linesCleared: number,
     score: number,
     isTSpin: boolean = false,
-    isPerfectClear: boolean = false
+    isPerfectClear: boolean = false,
+    spinResult?: SpinResult | null
   ) => {
     const effectType = determineEffectType(linesCleared, isTSpin, isPerfectClear)
     const effectId = `${effectType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -42,7 +45,8 @@ export function useEffectSystem() {
       lines: linesCleared,
       score,
       isVisible: true,
-      id: effectId
+      id: effectId,
+      spinResult
     })
   }, [determineEffectType])
 

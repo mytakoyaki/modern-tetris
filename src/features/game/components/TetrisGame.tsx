@@ -30,12 +30,12 @@ export default function TetrisGame() {
   const { startGame } = gameEngine
   
   const { currentEffect, triggerEffect, completeEffect } = useEffectSystem()
-  const achievementPersistence = useAchievementPersistence()
+  useAchievementPersistence()
 
   // 演出コールバックをReduxストアに設定
   React.useEffect(() => {
-    setLineClearCallback((linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean) => {
-      triggerEffect(linesCleared, score, isTSpin, isPerfectClear)
+    setLineClearCallback((linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean, spinResult?: any) => {
+      triggerEffect(linesCleared, score, isTSpin, isPerfectClear, spinResult)
     })
   }, [triggerEffect])
 
@@ -236,6 +236,7 @@ export default function TetrisGame() {
           score={currentEffect.score}
           isVisible={currentEffect.isVisible}
           onComplete={completeEffect}
+          spinResult={currentEffect.spinResult}
         />
       )}
       
