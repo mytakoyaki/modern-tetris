@@ -8,7 +8,22 @@ import { updateFeverTime } from '@/store/slices/gameSlice'
 import { FEVER_CONFIG } from '@/types/points'
 
 interface FeverModeDisplayProps {
-  variant?: 'compact' | 'detailed'
+  variant?: 'compact' | 'full'
+}
+
+function formatTime(milliseconds: number): string {
+  const seconds = Math.ceil(milliseconds / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+function getProgressValue(): number {
+  return 100 // フィーバー中は常に100%
+}
+
+function getProgressColor(): string {
+  return '#ff8c00'
 }
 
 export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDisplayProps) {
@@ -36,28 +51,6 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
     return () => clearInterval(interval)
   }, [feverMode.isActive, dispatch])
 
-  const formatTime = (milliseconds: number) => {
-    const seconds = Math.ceil(milliseconds / 1000)
-    return `${seconds}s`
-  }
-
-  const getProgressValue = () => {
-    if (feverMode.isActive) {
-      return (feverMode.timeRemaining / FEVER_CONFIG.DURATION) * 100
-    }
-    return ((FEVER_CONFIG.BLOCKS_NEEDED - feverMode.blocksUntilActivation) / FEVER_CONFIG.BLOCKS_NEEDED) * 100
-  }
-
-  const getProgressColor = () => {
-    if (feverMode.isActive) {
-      const ratio = feverMode.timeRemaining / FEVER_CONFIG.DURATION
-      if (ratio > 0.5) return '#ff8c00'
-      if (ratio > 0.2) return '#ff8c00'
-      return '#ffff00'
-    }
-    return '#00ff88'
-  }
-
   if (variant === 'compact') {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -69,10 +62,43 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
                 backgroundColor: '#ff8c00',
                 color: '#fff',
                 fontWeight: 'bold',
-                animation: 'pulse 1s infinite'
+                fontSize: '0.9rem',
+                animation: 'feverPulse 1s infinite',
+                boxShadow: '0 0 10px rgba(255, 140, 0, 0.5)',
+                '@keyframes feverPulse': {
+                  '0%': { 
+                    transform: 'scale(1)',
+                    boxShadow: '0 0 10px rgba(255, 140, 0, 0.5)',
+                  },
+                  '50%': { 
+                    transform: 'scale(1.05)',
+                    boxShadow: '0 0 15px rgba(255, 140, 0, 0.8)',
+                  },
+                  '100%': { 
+                    transform: 'scale(1)',
+                    boxShadow: '0 0 10px rgba(255, 140, 0, 0.5)',
+                  },
+                },
               }}
             />
-            <Typography variant="body2" sx={{ color: '#ff8c00', fontWeight: 'bold' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#ff8c00', 
+                fontWeight: 'bold',
+                fontSize: '1.1rem',
+                textShadow: '0 0 5px rgba(255, 140, 0, 0.5)',
+                animation: 'feverTextGlow 1.5s ease-in-out infinite alternate',
+                '@keyframes feverTextGlow': {
+                  '0%': { 
+                    textShadow: '0 0 5px rgba(255, 140, 0, 0.5)',
+                  },
+                  '100%': { 
+                    textShadow: '0 0 10px rgba(255, 140, 0, 0.8), 0 0 15px rgba(255, 140, 0, 0.6)',
+                  },
+                },
+              }}
+            >
               {formatTime(feverMode.timeRemaining)}
             </Typography>
           </>
@@ -93,33 +119,44 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
   return (
     <Paper sx={{ 
       p: 2, 
-      backgroundColor: feverMode.isActive ? 'rgba(255, 140, 0, 0.1)' : 'rgba(26, 26, 26, 0.9)',
-      border: feverMode.isActive ? '2px solid #ff8c00' : '1px solid transparent',
+      backgroundColor: feverMode.isActive ? 'rgba(255, 140, 0, 0.15)' : 'rgba(26, 26, 26, 0.9)',
+      border: feverMode.isActive ? '3px solid #ff8c00' : '1px solid transparent',
       borderRadius: 2,
-      animation: feverMode.isActive ? 'glow 2s ease-in-out infinite alternate' : 'none',
-      '@keyframes glow': {
+      animation: feverMode.isActive ? 'feverGlow 2s ease-in-out infinite alternate' : 'none',
+      boxShadow: feverMode.isActive ? '0 0 20px rgba(255, 140, 0, 0.3)' : 'none',
+      '@keyframes feverGlow': {
         from: {
-          boxShadow: '0 0 5px #ff8c00',
+          boxShadow: '0 0 20px rgba(255, 140, 0, 0.3)',
+          borderColor: '#ff8c00',
         },
         to: {
-          boxShadow: '0 0 20px #ff8c00, 0 0 30px #ff8c00',
+          boxShadow: '0 0 30px rgba(255, 140, 0, 0.6), 0 0 40px rgba(255, 140, 0, 0.3)',
+          borderColor: '#ffd700',
         },
       },
-      '@keyframes pulse': {
-        '0%': { opacity: 1 },
-        '50%': { opacity: 0.7 },
-        '100%': { opacity: 1 },
-      }
     }}>
       <Typography 
         variant="h6" 
         sx={{ 
-          color: feverMode.isActive ? '#ff8c00' : '#ff8c00', 
+          color: feverMode.isActive ? '#ffd700' : '#ff8c00', 
           mb: 1,
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          textAlign: 'center',
+          textShadow: feverMode.isActive ? '0 0 10px rgba(255, 215, 0, 0.5)' : 'none',
+          animation: feverMode.isActive ? 'feverTitleGlow 2s ease-in-out infinite alternate' : 'none',
+          '@keyframes feverTitleGlow': {
+            '0%': { 
+              textShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+              transform: 'scale(1)',
+            },
+            '100%': { 
+              textShadow: '0 0 15px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.6)',
+              transform: 'scale(1.02)',
+            },
+          },
         }}
       >
-        FEVER MODE
+        {feverMode.isActive ? '🔥 FEVER MODE 🔥' : 'FEVER MODE'}
       </Typography>
       
       {feverMode.isActive ? (
@@ -130,7 +167,19 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
               color: '#ff8c00', 
               mb: 1, 
               fontWeight: 'bold',
-              textAlign: 'center'
+              textAlign: 'center',
+              textShadow: '0 0 15px rgba(255, 140, 0, 0.6)',
+              animation: 'feverTimerPulse 1s ease-in-out infinite alternate',
+              '@keyframes feverTimerPulse': {
+                '0%': { 
+                  textShadow: '0 0 15px rgba(255, 140, 0, 0.6)',
+                  transform: 'scale(1)',
+                },
+                '100%': { 
+                  textShadow: '0 0 25px rgba(255, 140, 0, 0.8), 0 0 35px rgba(255, 140, 0, 0.6)',
+                  transform: 'scale(1.05)',
+                },
+              },
             }}
           >
             {formatTime(feverMode.timeRemaining)}
@@ -140,24 +189,51 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
             variant="determinate"
             value={getProgressValue()}
             sx={{
-              height: 8,
-              borderRadius: 4,
+              height: 10,
+              borderRadius: 5,
               backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              mb: 1,
               '& .MuiLinearProgress-bar': {
                 backgroundColor: getProgressColor(),
-                borderRadius: 4,
+                borderRadius: 5,
+                animation: 'feverProgressGlow 2s ease-in-out infinite alternate',
+                '@keyframes feverProgressGlow': {
+                  '0%': { 
+                    boxShadow: '0 0 5px rgba(255, 140, 0, 0.5)',
+                  },
+                  '100%': { 
+                    boxShadow: '0 0 10px rgba(255, 140, 0, 0.8), 0 0 15px rgba(255, 140, 0, 0.6)',
+                  },
+                },
               },
-              mb: 1
             }}
           />
           
-          <Typography variant="body2" sx={{ color: '#ff8c00', textAlign: 'center' }}>
-            <strong>4x SCORE • FREE EXCHANGES</strong>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#ffd700', 
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              textShadow: '0 0 5px rgba(255, 215, 0, 0.5)',
+              animation: 'feverBonusText 2s ease-in-out infinite alternate',
+              '@keyframes feverBonusText': {
+                '0%': { 
+                  textShadow: '0 0 5px rgba(255, 215, 0, 0.5)',
+                },
+                '100%': { 
+                  textShadow: '0 0 10px rgba(255, 215, 0, 0.8), 0 0 15px rgba(255, 215, 0, 0.6)',
+                },
+              },
+            }}
+          >
+            ⚡ 4x SCORE • FREE EXCHANGES ⚡
           </Typography>
         </>
       ) : (
         <>
-          <Typography variant="body1" sx={{ color: '#fff', mb: 1 }}>
+          <Typography variant="body1" sx={{ color: '#fff', mb: 1, textAlign: 'center' }}>
             Progress: {FEVER_CONFIG.BLOCKS_NEEDED - feverMode.blocksUntilActivation}/{FEVER_CONFIG.BLOCKS_NEEDED}
           </Typography>
           
@@ -165,14 +241,15 @@ export default function FeverModeDisplay({ variant = 'compact' }: FeverModeDispl
             variant="determinate"
             value={((FEVER_CONFIG.BLOCKS_NEEDED - feverMode.blocksUntilActivation) / FEVER_CONFIG.BLOCKS_NEEDED) * 100}
             sx={{
-              height: 6,
-              borderRadius: 3,
+              height: 8,
+              borderRadius: 4,
               backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              mb: 1,
               '& .MuiLinearProgress-bar': {
                 backgroundColor: '#00ff88',
-                borderRadius: 3,
+                borderRadius: 4,
+                boxShadow: '0 0 5px rgba(0, 255, 136, 0.5)',
               },
-              mb: 1
             }}
           />
           
