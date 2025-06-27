@@ -200,6 +200,10 @@ export interface GameState {
   isLocking: boolean
   isSoftDropping: boolean
   softDropInterval: number
+  
+  // Drop distance tracking for scoring
+  softDropDistance: number
+  hardDropDistance: number
 }
 
 const initialState: GameState = {
@@ -260,7 +264,11 @@ const initialState: GameState = {
   lockDelay: 500, // 0.5秒のロック遅延
   isLocking: false,
   isSoftDropping: false,
-  softDropInterval: 50 // 50ms間隔（ソフトドロップ時）
+  softDropInterval: 50, // 50ms間隔（ソフトドロップ時）
+  
+  // Drop distance tracking for scoring
+  softDropDistance: 0,
+  hardDropDistance: 0
 }
 
 export const gameSlice = createSlice({
@@ -386,11 +394,10 @@ export const gameSlice = createSlice({
             state.lockTimer = 0
           }
           
-          // ソフトドロップポイント（下方向の移動時）- 累積のみ、recentには追加しない
+          // ソフトドロップ距離を累積（下方向の移動時）
           if (action.payload.dy > 0) {
-            const pointsGained = calculatePointsGained('soft-drop', action.payload.dy)
-            state.pointSystem.totalPoints += pointsGained.total
-            state.pointSystem.lastDropBonus += pointsGained.total
+            state.softDropDistance += action.payload.dy
+            console.log('[DEBUG] Soft drop distance accumulated:', state.softDropDistance)
           }
         }
       }
@@ -503,12 +510,9 @@ export const gameSlice = createSlice({
         state.currentPiece.y = testY
       }
       
-      // ハードドロップポイント計算 - 累積のみ、recentには追加しない
-      if (dropDistance > 0) {
-        const pointsGained = calculatePointsGained('hard-drop', dropDistance)
-        state.pointSystem.totalPoints += pointsGained.total
-        state.pointSystem.lastDropBonus = pointsGained.total
-      }
+      // ハードドロップ距離を記録
+      state.hardDropDistance = dropDistance
+      console.log('[DEBUG] Hard drop distance recorded:', dropDistance)
       
       // ハードドロップ後は即座にロック
       state.isLocking = false
@@ -518,27 +522,44 @@ export const gameSlice = createSlice({
       // 基本設置ポイント
       const placementPoints = calculatePointsGained('placement', 1)
       let totalBlockPoints = placementPoints.total
+      let dropBonus = 0
+      
+      // ソフトドロップポイント計算
+      if (state.softDropDistance > 0) {
+        const softDropPoints = calculatePointsGained('soft-drop', state.softDropDistance)
+        dropBonus += softDropPoints.total
+        console.log('[DEBUG] Soft drop points calculated:', softDropPoints.total, 'for distance:', state.softDropDistance)
+      }
+      
+      // ハードドロップポイント計算
+      if (state.hardDropDistance > 0) {
+        const hardDropPoints = calculatePointsGained('hard-drop', state.hardDropDistance)
+        dropBonus += hardDropPoints.total
+        console.log('[DEBUG] Hard drop points calculated:', hardDropPoints.total, 'for distance:', state.hardDropDistance)
+      }
       
       // 累積された落下ポイントがある場合は追加
       if (state.pointSystem.lastDropBonus > 0) {
-        totalBlockPoints += state.pointSystem.lastDropBonus
+        dropBonus += state.pointSystem.lastDropBonus
       }
       
       // 総ポイントを更新
-      state.pointSystem.totalPoints += placementPoints.total
+      state.pointSystem.totalPoints += placementPoints.total + dropBonus
       
       // ブロック設置による総獲得ポイントをrecentに追加
       const blockCompletionPoints = {
         type: 'block-completion' as const,
         basePoints: placementPoints.total,
-        dropBonus: state.pointSystem.lastDropBonus,
-        total: totalBlockPoints,
+        dropBonus: dropBonus,
+        total: totalBlockPoints + dropBonus,
         timestamp: Date.now()
       }
       state.recentPointsGained.push(blockCompletionPoints)
       
-      // 落下ボーナスをリセット
+      // 落下ボーナスと距離をリセット
       state.pointSystem.lastDropBonus = 0
+      state.softDropDistance = 0
+      state.hardDropDistance = 0
       
       // エクスチェンジカウントリセット（テトリミノ設置時）
       state.pointSystem.exchangeCount = resetExchangeCount()
@@ -722,10 +743,11 @@ export const gameSlice = createSlice({
             state.isLocking = false
             state.lockTimer = 0
             
-            // ソフトドロップポイント - 累積のみ
-            const pointsGained = calculatePointsGained('soft-drop', 1)
-            state.pointSystem.totalPoints += pointsGained.total
-            state.pointSystem.lastDropBonus += pointsGained.total
+            // ソフトドロップ距離を累積（自動落下時）
+            if (state.isSoftDropping) {
+              state.softDropDistance += 1
+              console.log('[DEBUG] Auto soft drop distance accumulated:', state.softDropDistance)
+            }
           } else {
             // 下に移動できない場合、ロック処理開始
             if (!state.isLocking) {
@@ -745,27 +767,44 @@ export const gameSlice = createSlice({
             // placeTetromino ロジックを実行（ブロック設置による総獲得ポイント記録）
             const placementPoints = calculatePointsGained('placement', 1)
             let totalBlockPoints = placementPoints.total
+            let dropBonus = 0
+            
+            // ソフトドロップポイント計算
+            if (state.softDropDistance > 0) {
+              const softDropPoints = calculatePointsGained('soft-drop', state.softDropDistance)
+              dropBonus += softDropPoints.total
+              console.log('[DEBUG] Auto lock - Soft drop points calculated:', softDropPoints.total, 'for distance:', state.softDropDistance)
+            }
+            
+            // ハードドロップポイント計算
+            if (state.hardDropDistance > 0) {
+              const hardDropPoints = calculatePointsGained('hard-drop', state.hardDropDistance)
+              dropBonus += hardDropPoints.total
+              console.log('[DEBUG] Auto lock - Hard drop points calculated:', hardDropPoints.total, 'for distance:', state.hardDropDistance)
+            }
             
             // 累積された落下ポイントがある場合は追加
             if (state.pointSystem.lastDropBonus > 0) {
-              totalBlockPoints += state.pointSystem.lastDropBonus
+              dropBonus += state.pointSystem.lastDropBonus
             }
             
             // 総ポイントを更新
-            state.pointSystem.totalPoints += placementPoints.total
+            state.pointSystem.totalPoints += placementPoints.total + dropBonus
             
             // ブロック設置による総獲得ポイントをrecentに追加
             const blockCompletionPoints = {
               type: 'block-completion' as const,
               basePoints: placementPoints.total,
-              dropBonus: state.pointSystem.lastDropBonus,
-              total: totalBlockPoints,
+              dropBonus: dropBonus,
+              total: totalBlockPoints + dropBonus,
               timestamp: Date.now()
             }
             state.recentPointsGained.push(blockCompletionPoints)
             
-            // 落下ボーナスをリセット
+            // 落下ボーナスと距離をリセット
             state.pointSystem.lastDropBonus = 0
+            state.softDropDistance = 0
+            state.hardDropDistance = 0
             
             // エクスチェンジカウントリセット
             state.pointSystem.exchangeCount = resetExchangeCount()
@@ -1031,6 +1070,11 @@ export const gameSlice = createSlice({
       state.lockTimer = 0
       state.isLocking = false
       state.isSoftDropping = false
+      state.softDropInterval = 50
+      
+      // Drop distance tracking for scoring
+      state.softDropDistance = 0
+      state.hardDropDistance = 0
       
       // 段位を現在のスコア（0）に基づいてリセット
       state.currentRank = getCurrentRank(0)
