@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   images: {
     unoptimized: true
+  },
+  // 静的エクスポートの設定
+  experimental: {
+    esmExternals: false
   }
 };
 

@@ -33,11 +33,22 @@ export default function TetrisGame() {
   const { currentEffect, triggerEffect, completeEffect } = useEffectSystem()
   useAchievementPersistence()
 
+  // デバッグ情報を出力
+  React.useEffect(() => {
+    console.log('TetrisGame component mounted')
+    console.log('Game state:', gameState)
+    console.log('Game engine:', gameEngine)
+  }, [gameState, gameEngine])
+
   // 演出コールバックをReduxストアに設定
   React.useEffect(() => {
-    setLineClearCallback((linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean, spinResult?: SpinResult | null) => {
-      triggerEffect(linesCleared, score, isTSpin, isPerfectClear, spinResult)
-    })
+    try {
+      setLineClearCallback((linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean, spinResult?: SpinResult | null) => {
+        triggerEffect(linesCleared, score, isTSpin, isPerfectClear, spinResult)
+      })
+    } catch (error) {
+      console.error('Error setting line clear callback:', error)
+    }
   }, [triggerEffect])
 
   // ゲーム開始画面
