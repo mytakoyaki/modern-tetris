@@ -53,6 +53,19 @@ export default function ExchangeControls() {
         EXCHANGE
       </Typography>
       
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          color: '#666', 
+          textAlign: 'center',
+          display: 'block',
+          mb: 1.5,
+          fontSize: '0.7rem'
+        }}
+      >
+        Press E key to exchange
+      </Typography>
+      
       {!isGameRunning && (
         <Typography 
           variant="body2" 

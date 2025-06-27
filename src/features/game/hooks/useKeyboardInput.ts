@@ -49,7 +49,6 @@ export interface InputCallbacks {
   onHold2?: () => void
   onExchange?: () => void
   onLineDelete?: () => void
-  onPause?: () => void
 }
 
 export const useKeyboardInput = (
@@ -87,8 +86,6 @@ export const useKeyboardInput = (
         return callbacks.onExchange
       case 'lineDelete':
         return callbacks.onLineDelete
-      case 'pause':
-        return callbacks.onPause
       default:
         return undefined
     }

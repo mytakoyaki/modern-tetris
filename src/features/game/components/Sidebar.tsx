@@ -495,10 +495,10 @@ export default function Sidebar({ position }: SidebarProps) {
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
-                  P
+                  E
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#fff', fontSize: '0.7rem' }}>
-                  Pause
+                  Exchange
                 </Typography>
               </Box>
             </Box>
