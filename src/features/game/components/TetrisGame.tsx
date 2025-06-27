@@ -10,6 +10,7 @@ import { Box, Button, Typography } from '@mui/material'
 import { useSelector } from 'react-redux'
 import { useRouter } from 'next/navigation'
 import type { RootState } from '@/store/store'
+import { setLineClearCallback } from '@/store/store'
 import { useGameEngine } from '../hooks/useGameEngine'
 import { AchievementNotification, useAchievementPersistence } from '@/features/achievement'
 import GameContainer from './GameContainer'
@@ -17,15 +18,26 @@ import GameMenu from './GameMenu'
 import FeverModeEffects from './FeverModeEffects'
 import FeverScoreEffect from './FeverScoreEffect'
 import DangerModeEffects from './DangerModeEffects'
+import LineClearEffect from '../effects/components/LineClearEffect'
+import { useEffectSystem } from '../effects/hooks/useEffectSystem'
 
 export default function TetrisGame() {
   const router = useRouter()
-  const { isGameRunning, isGameOver, score } = useSelector((state: RootState) => state.game)
+  const gameState = useSelector((state: RootState) => state.game)
+  const { isGameRunning, isGameOver, score } = gameState
+  
   const gameEngine = useGameEngine()
   const { startGame } = gameEngine
   
-  // アチーブメント永続化フック
-  useAchievementPersistence()
+  const { currentEffect, triggerEffect, completeEffect } = useEffectSystem()
+  const achievementPersistence = useAchievementPersistence()
+
+  // 演出コールバックをReduxストアに設定
+  React.useEffect(() => {
+    setLineClearCallback((linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean) => {
+      triggerEffect(linesCleared, score, isTSpin, isPerfectClear)
+    })
+  }, [triggerEffect])
 
   // ゲーム開始画面
   const renderStartScreen = () => (
@@ -201,19 +213,45 @@ export default function TetrisGame() {
 
   // ゲーム中画面
   const renderGameScreen = () => (
-    <>
+    <Box sx={{
+      // ゲーム画面コンテナのGPU加速
+      willChange: 'transform, opacity',
+      transform: 'translate3d(0, 0, 0)',
+      backfaceVisibility: 'hidden',
+      contain: 'layout style paint'
+    }}>
       <GameMenu />
       <GameContainer />
       <DangerModeEffects />
       <FeverModeEffects />
       <FeverScoreEffect />
       <AchievementNotification />
+      
+      {/* ライン消去演出 */}
+      {currentEffect && (
+        <LineClearEffect
+          key={currentEffect.id}
+          type={currentEffect.type}
+          lines={currentEffect.lines}
+          score={currentEffect.score}
+          isVisible={currentEffect.isVisible}
+          onComplete={completeEffect}
+        />
+      )}
+      
       {isGameOver && renderGameOverScreen()}
-    </>
+    </Box>
   )
 
   return (
-    <Box sx={{ minHeight: '100vh', position: 'relative' }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      position: 'relative',
+      // ゲーム全体のGPU加速
+      willChange: 'transform, opacity',
+      transform: 'translate3d(0, 0, 0)',
+      backfaceVisibility: 'hidden'
+    }}>
       {!isGameRunning && !isGameOver ? renderStartScreen() : renderGameScreen()}
     </Box>
   )

@@ -53,6 +53,9 @@ export const useGameEngine = () => {
   const levelGaugeRef = useRef<number>(0)
   const levelGaugeTimerRef = useRef<any>(null)
   
+  // ライン消去コールバック
+  const onLineClearRef = useRef<((linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean) => void) | null>(null)
+  
   // dispatchの参照を安定化
   const dispatchRef = useRef(dispatch)
   dispatchRef.current = dispatch
@@ -402,6 +405,10 @@ export const useGameEngine = () => {
   return {
     startGame: handleStartGame,
     stopGame: handleStopGame,
+    onLineClear: onLineClearRef.current,
+    setOnLineClear: (callback: (linesCleared: number, score: number, isTSpin: boolean, isPerfectClear: boolean) => void) => {
+      onLineClearRef.current = callback
+    },
     // 必要に応じて他の操作関数もエクスポート
   }
 }

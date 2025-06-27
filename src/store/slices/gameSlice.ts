@@ -1,6 +1,28 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Tetromino } from '@/features/game/utils/tetromino'
 import { TETROMINO_TYPES } from '@/types/game'
+import { getLineClearCallback } from '../store'
+import { detectSpin, isBackToBackEligible } from '@/features/game/utils/spinDetection'
+import type { SpinResult } from '@/types/spin'
+import type { PointsState, PointsGained, ExchangeResult } from '@/types/points'
+import { POINTS_CONFIG, EXCHANGE_COSTS, FEVER_CONFIG } from '@/types/points'
+import type { Rank, RankProgress } from '@/types/rank'
+import { RANKS } from '@/types/rank'
+import { 
+  calculatePointsGained, 
+  getCurrentExchangeCost, 
+  getNextExchangeCost, 
+  attemptExchange,
+  resetExchangeCount,
+  createInitialPointsState,
+  getHoldCost
+} from '@/features/game/utils/pointsSystem'
+import { 
+  getCurrentRank, 
+  calculateRankProgress, 
+  checkPromotion,
+  calculateRankBonus
+} from '@/features/game/utils/rankSystem'
 
 // Redux専用のゲームロジックユーティリティ
 function getTetrominoBlocks(piece: {type: string | null, x: number, y: number, rotation: number}): {x: number, y: number}[] {
@@ -112,27 +134,6 @@ function generateRandomPiece(): 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L' {
   const pieces: ('I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L')[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L']
   return pieces[Math.floor(Math.random() * pieces.length)]
 }
-import { detectSpin, isBackToBackEligible } from '@/features/game/utils/spinDetection'
-import type { SpinResult } from '@/types/spin'
-import type { PointsState, PointsGained, ExchangeResult } from '@/types/points'
-import { POINTS_CONFIG, EXCHANGE_COSTS, FEVER_CONFIG } from '@/types/points'
-import type { Rank, RankProgress } from '@/types/rank'
-import { RANKS } from '@/types/rank'
-import { 
-  calculatePointsGained, 
-  getCurrentExchangeCost, 
-  getNextExchangeCost, 
-  attemptExchange,
-  resetExchangeCount,
-  createInitialPointsState,
-  getHoldCost
-} from '@/features/game/utils/pointsSystem'
-import { 
-  getCurrentRank, 
-  calculateRankProgress, 
-  checkPromotion,
-  calculateRankBonus
-} from '@/features/game/utils/rankSystem'
 
 export interface GameState {
   // Game field (10x20 grid) - 配置済みブロックのみ
@@ -559,6 +560,17 @@ export const gameSlice = createSlice({
         const multiplier = state.feverMode.isActive ? 4 : 1
         const finalScore = baseScore * state.level * multiplier
         state.score += finalScore
+        
+        // 演出コールバックを呼び出し
+        const lineClearCallback = getLineClearCallback()
+        if (lineClearCallback) {
+          // T-Spin判定（簡易版 - 実際の判定ロジックは別途実装が必要）
+          const isTSpin = state.lastAction === 'rotate' && completedLines.length > 0
+          // Perfect Clear判定（簡易版）
+          const isPerfectClear = state.field.every(row => row.every(cell => cell === null))
+          
+          lineClearCallback(completedLines.length, finalScore, isTSpin, isPerfectClear)
+        }
       }
       
       // ロック状態リセット
@@ -739,6 +751,17 @@ export const gameSlice = createSlice({
               const multiplier = state.feverMode.isActive ? 4 : 1
               const finalScore = baseScore * state.level * multiplier
               state.score += finalScore
+              
+              // 演出コールバックを呼び出し
+              const lineClearCallback = getLineClearCallback()
+              if (lineClearCallback) {
+                // T-Spin判定（簡易版 - 実際の判定ロジックは別途実装が必要）
+                const isTSpin = state.lastAction === 'rotate' && completedLines.length > 0
+                // Perfect Clear判定（簡易版）
+                const isPerfectClear = state.field.every(row => row.every(cell => cell === null))
+                
+                lineClearCallback(completedLines.length, finalScore, isTSpin, isPerfectClear)
+              }
             }
             
             // ロック状態リセット
