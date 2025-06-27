@@ -39,7 +39,7 @@
 
 Your game will be available at:
 ```
-https://mytakoyaki.github.io/project-tetris/
+https://mytakoyaki.github.io/modern-tetris/
 ```
 
 ### Manual Deployment

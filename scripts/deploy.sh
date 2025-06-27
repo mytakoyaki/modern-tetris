@@ -15,7 +15,7 @@ if [ $? -eq 0 ]; then
     echo "🌐 To deploy to GitHub Pages:"
     echo "1. Commit and push your changes to the main branch"
     echo "2. GitHub Actions will automatically deploy to GitHub Pages"
-    echo "3. Your site will be available at: https://mytakoyaki.github.io/project-tetris/"
+    echo "3. Your site will be available at: https://mytakoyaki.github.io/modern-tetris/"
 else
     echo "❌ Build failed!"
     exit 1
