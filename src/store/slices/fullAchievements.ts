@@ -30,7 +30,6 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🏁',
     pointReward: 10,
     unlocked: false,
-    unlockedAt: '2024-04-01',
     progress: 0,
     maxProgress: 1,
     condition: { type: 'lines_cleared', value: 1 }
@@ -43,7 +42,6 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎮',
     pointReward: 5,
     unlocked: false,
-    unlockedAt: '2024-04-01',
     progress: 0,
     maxProgress: 1,
     condition: { type: 'games_played', value: 1 }
@@ -56,7 +54,6 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🏆',
     pointReward: 30,
     unlocked: false,
-    unlockedAt: '2024-04-01',
     progress: 0,
     maxProgress: 1,
     condition: { type: 'tetris', value: 1 }
@@ -69,7 +66,6 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔥',
     pointReward: 40,
     unlocked: false,
-    unlockedAt: '2024-04-01',
     progress: 0,
     maxProgress: 1,
     condition: { type: 'tspin', value: 1 }
@@ -82,7 +78,6 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔥',
     pointReward: 30,
     unlocked: false,
-    unlockedAt: '2024-04-01',
     progress: 0,
     maxProgress: 1,
     condition: { type: 'fever_count', value: 1 }
@@ -97,7 +92,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 5,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 100,
     condition: { type: 'score', value: 100 }
@@ -110,7 +105,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⭐',
     pointReward: 10,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 500,
     condition: { type: 'score', value: 500 }
@@ -123,7 +118,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '💫',
     pointReward: 20,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1000,
     condition: { type: 'score', value: 1000 }
@@ -136,7 +131,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎊',
     pointReward: 25,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 2000,
     condition: { type: 'score', value: 2000 }
@@ -149,7 +144,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎉',
     pointReward: 30,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 3000,
     condition: { type: 'score', value: 3000 }
@@ -162,7 +157,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '✨',
     pointReward: 35,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 4000,
     condition: { type: 'score', value: 4000 }
@@ -175,7 +170,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🌟',
     pointReward: 40,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 5000,
     condition: { type: 'score', value: 5000 }
@@ -188,7 +183,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '💫',
     pointReward: 45,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 6000,
     condition: { type: 'score', value: 6000 }
@@ -201,7 +196,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🌠',
     pointReward: 50,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 7000,
     condition: { type: 'score', value: 7000 }
@@ -214,7 +209,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⭐',
     pointReward: 55,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 8000,
     condition: { type: 'score', value: 8000 }
@@ -227,7 +222,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔥',
     pointReward: 60,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 9000,
     condition: { type: 'score', value: 9000 }
@@ -240,7 +235,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '👑',
     pointReward: 65,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 10000,
     condition: { type: 'score', value: 10000 }
@@ -253,7 +248,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 70,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 12000,
     condition: { type: 'score', value: 12000 }
@@ -266,7 +261,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 75,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 15000,
     condition: { type: 'score', value: 15000 }
@@ -279,7 +274,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 80,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 18000,
     condition: { type: 'score', value: 18000 }
@@ -292,7 +287,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🏔️',
     pointReward: 85,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 20000,
     condition: { type: 'score', value: 20000 }
@@ -305,7 +300,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 90,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 25000,
     condition: { type: 'score', value: 25000 }
@@ -318,7 +313,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 95,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 30000,
     condition: { type: 'score', value: 30000 }
@@ -331,7 +326,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 100,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 35000,
     condition: { type: 'score', value: 35000 }
@@ -344,7 +339,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 105,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 40000,
     condition: { type: 'score', value: 40000 }
@@ -357,7 +352,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 110,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 45000,
     condition: { type: 'score', value: 45000 }
@@ -370,7 +365,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🗻',
     pointReward: 115,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 50000,
     condition: { type: 'score', value: 50000 }
@@ -383,7 +378,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 120,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 60000,
     condition: { type: 'score', value: 60000 }
@@ -396,7 +391,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 125,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 70000,
     condition: { type: 'score', value: 70000 }
@@ -409,7 +404,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 130,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 80000,
     condition: { type: 'score', value: 80000 }
@@ -422,7 +417,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 135,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 90000,
     condition: { type: 'score', value: 90000 }
@@ -435,7 +430,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🏔️',
     pointReward: 140,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 100000,
     condition: { type: 'score', value: 100000 }
@@ -450,7 +445,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⚡',
     pointReward: 25,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 5,
     condition: { type: 'max_combo', value: 5 }
@@ -463,7 +458,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⚡',
     pointReward: 44,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 7,
     condition: { type: 'max_combo', value: 7 }
@@ -476,7 +471,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⚡',
     pointReward: 100,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 10,
     condition: { type: 'max_combo', value: 10 }
@@ -489,7 +484,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '✨',
     pointReward: 100,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'perfect_clear', value: 1 }
@@ -502,7 +497,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '✨',
     pointReward: 66,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 3,
     condition: { type: 'perfect_clear', value: 3 }
@@ -515,7 +510,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔄',
     pointReward: 60,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 10,
     condition: { type: 'tspin', value: 10 }
@@ -528,7 +523,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔄',
     pointReward: 56,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 5,
     condition: { type: 'tspin', value: 5 }
@@ -541,7 +536,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '💥',
     pointReward: 30,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 50,
     condition: { type: 'lines_cleared', value: 50 }
@@ -554,7 +549,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '💥',
     pointReward: 20,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 25,
     condition: { type: 'lines_cleared', value: 25 }
@@ -567,7 +562,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '💥',
     pointReward: 15,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 10,
     condition: { type: 'lines_cleared', value: 10 }
@@ -580,7 +575,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 100,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 100,
     condition: { type: 'lines_cleared', value: 100 }
@@ -593,7 +588,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🏭',
     pointReward: 66,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 200,
     condition: { type: 'lines_cleared', value: 200 }
@@ -608,7 +603,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 20,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 1 }
@@ -621,7 +616,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 30,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 2 }
@@ -634,7 +629,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 50,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 3 }
@@ -647,7 +642,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 80,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 4 }
@@ -660,7 +655,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 100,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 5 }
@@ -673,7 +668,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 120,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 6 }
@@ -686,7 +681,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 150,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 7 }
@@ -699,7 +694,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 200,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 8 }
@@ -712,7 +707,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 250,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 9 }
@@ -725,7 +720,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🥋',
     pointReward: 280,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 10 }
@@ -738,7 +733,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '👑',
     pointReward: 300,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 11 }
@@ -751,7 +746,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🐲',
     pointReward: 500,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 12 }
@@ -764,7 +759,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '👑',
     pointReward: 1000,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'dan_rank', value: 13 }
@@ -779,7 +774,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '📈',
     pointReward: 30,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 10,
     condition: { type: 'level', value: 10 }
@@ -792,7 +787,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '📈',
     pointReward: 60,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 20,
     condition: { type: 'level', value: 20 }
@@ -805,7 +800,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🧗',
     pointReward: 130,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 20,
     condition: { type: 'level', value: 20 }
@@ -820,7 +815,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⚡',
     pointReward: 60,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'speed_score', value: 500, score: 500, time: 60000 }
@@ -833,7 +828,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🏃',
     pointReward: 69,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'speed_score', value: 1000, score: 1000, time: 180000 }
@@ -846,7 +841,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 120,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'efficient_score', value: 1000, score: 1000, max_blocks: 100 }
@@ -859,7 +854,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 100,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'efficient_score', value: 1000, score: 1000, max_blocks: 20 }
@@ -872,7 +867,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🧘',
     pointReward: 150,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'no_exchange_score', value: 1000, score: 1000 }
@@ -885,7 +880,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⚔️',
     pointReward: 120,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'no_hold_score', value: 500, score: 500 }
@@ -898,7 +893,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🏆',
     pointReward: 200,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'tetris_only', value: 3 }
@@ -913,7 +908,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎉',
     pointReward: 35,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 10,
     condition: { type: 'fever_count', value: 10 }
@@ -926,7 +921,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔥',
     pointReward: 40,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 20,
     condition: { type: 'fever_count', value: 20 }
@@ -939,7 +934,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔥',
     pointReward: 50,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'single_game_fever', value: 5 }
@@ -952,7 +947,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '💸',
     pointReward: 50,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'fever_no_lines', value: 1 }
@@ -965,7 +960,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '💀',
     pointReward: 30,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'gameover_during_fever', value: 1 }
@@ -978,7 +973,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔄',
     pointReward: 20,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 50,
     condition: { type: 'exchange_count', value: 50 }
@@ -991,7 +986,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔄',
     pointReward: 133,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 100,
     condition: { type: 'exchange_count', value: 100 }
@@ -1004,7 +999,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔄',
     pointReward: 20,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'single_game_exchange', value: 20 }
@@ -1017,7 +1012,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🤲',
     pointReward: 31,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 50,
     condition: { type: 'hold_count', value: 50 }
@@ -1030,7 +1025,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🤲',
     pointReward: 10,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'single_game_hold', value: 10 }
@@ -1043,7 +1038,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🏗️',
     pointReward: 39,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 500,
     condition: { type: 'blocks_placed', value: 500 }
@@ -1056,7 +1051,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⏱️',
     pointReward: 25,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'play_time', value: 300000 }
@@ -1069,7 +1064,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🏃',
     pointReward: 102,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'play_time', value: 600000 }
@@ -1082,7 +1077,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⏰',
     pointReward: 180,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'play_time', value: 1800000 }
@@ -1095,7 +1090,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⚡',
     pointReward: 5,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'quick_death', value: 30000, time: 30000 }
@@ -1108,7 +1103,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🍀',
     pointReward: 77,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'exact_score', value: 777 }
@@ -1121,7 +1116,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🦉',
     pointReward: 30,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'night_play', value: 1 }
@@ -1134,7 +1129,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔥',
     pointReward: 90,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'score', value: 9001 }
@@ -1147,7 +1142,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '✨',
     pointReward: 77,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'tetris', value: 10 }
@@ -1162,7 +1157,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 145,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 120000,
     condition: { type: 'score', value: 120000 }
@@ -1175,7 +1170,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎯',
     pointReward: 150,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 150000,
     condition: { type: 'score', value: 150000 }
@@ -1188,7 +1183,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🐲',
     pointReward: 160,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 200000,
     condition: { type: 'score', value: 200000 }
@@ -1201,7 +1196,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '👑',
     pointReward: 180,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 300000,
     condition: { type: 'score', value: 300000 }
@@ -1214,7 +1209,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '✨',
     pointReward: 250,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 500000,
     condition: { type: 'score', value: 500000 }
@@ -1227,7 +1222,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '💎',
     pointReward: 500,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1000000,
     condition: { type: 'score', value: 1000000 }
@@ -1242,7 +1237,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎮',
     pointReward: 50,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'konami_code', value: 1 },
@@ -1256,7 +1251,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🔄',
     pointReward: 40,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'palindrome_score', value: 1 },
@@ -1270,7 +1265,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎲',
     pointReward: 25,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'tspin', value: 1 }
@@ -1283,7 +1278,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎉',
     pointReward: 80,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'perfect_clear', value: 1 }
@@ -1296,7 +1291,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🌿',
     pointReward: 30,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'games_played', value: 1 }
@@ -1309,7 +1304,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎮',
     pointReward: 50,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 50,
     condition: { type: 'games_played', value: 50 }
@@ -1322,7 +1317,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '🎖️',
     pointReward: 100,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 100,
     condition: { type: 'games_played', value: 100 }
@@ -1335,7 +1330,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '👑',
     pointReward: 500,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 500,
     condition: { type: 'games_played', value: 500 }
@@ -1348,7 +1343,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⏰',
     pointReward: 60,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'total_playtime', value: 3600000 }
@@ -1361,7 +1356,7 @@ export const FULL_ACHIEVEMENTS: Achievement[] = [
     icon: '⏰',
     pointReward: 600,
     unlocked: false,
-    unlockedAt: '2024-04-01',
+    
     progress: 0,
     maxProgress: 1,
     condition: { type: 'total_playtime', value: 36000000 }

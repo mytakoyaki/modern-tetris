@@ -93,6 +93,10 @@ const AchievementDisplay: React.FC = () => {
   const { achievements, totalPoints, unlockedCount } = useSelector((state: RootState) => state.achievement)
   const [selectedCategory, setSelectedCategory] = React.useState('all')
 
+  // デバッグ用ログ
+  console.log('AchievementDisplay - achievements length:', achievements.length)
+  console.log('AchievementDisplay - unlockedCount:', unlockedCount)
+
   const categories = [
     { id: 'all', name: 'すべて' },
     { id: 'basic', name: '基本' },
