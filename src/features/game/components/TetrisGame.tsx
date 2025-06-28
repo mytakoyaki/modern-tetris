@@ -33,11 +33,24 @@ export default function TetrisGame() {
   const { currentEffect, triggerEffect, completeEffect } = useEffectSystem()
   useAchievementPersistence()
 
+  // ベースパスを動的に取得
+  const getBasePath = () => {
+    if (typeof window !== 'undefined') {
+      // GitHub Pagesの場合、パスにリポジトリ名が含まれる
+      const pathname = window.location.pathname
+      if (pathname.includes('/modern-tetris')) {
+        return '/modern-tetris'
+      }
+    }
+    return ''
+  }
+
   // デバッグ情報を出力
   React.useEffect(() => {
     console.log('TetrisGame component mounted')
     console.log('Game state:', gameState)
     console.log('Game engine:', gameEngine)
+    console.log('Base path:', getBasePath())
   }, [gameState, gameEngine])
 
   // 演出コールバックをReduxストアに設定
@@ -88,6 +101,10 @@ export default function TetrisGame() {
           zIndex: 0
         }}
       >
+        <source src={`${getBasePath()}/assets/videos/gemini_generated_video_55DF7A7E.mp4`} type="video/mp4" />
+        <source src={`${getBasePath()}/gemini_generated_video_55DF7A7E.mp4`} type="video/mp4" />
+        <source src="/modern-tetris/assets/videos/gemini_generated_video_55DF7A7E.mp4" type="video/mp4" />
+        <source src="/modern-tetris/gemini_generated_video_55DF7A7E.mp4" type="video/mp4" />
         <source src="/assets/videos/gemini_generated_video_55DF7A7E.mp4" type="video/mp4" />
         <source src="/gemini_generated_video_55DF7A7E.mp4" type="video/mp4" />
       </video>
