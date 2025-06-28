@@ -63,7 +63,9 @@ export default function TetrisGame() {
         backgroundColor: '#1a1a1a',
         color: '#fff',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        // フォールバック背景
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)'
       }}
     >
       {/* Background Video */}
@@ -71,6 +73,10 @@ export default function TetrisGame() {
         autoPlay
         loop
         muted
+        playsInline
+        onError={(e) => {
+          console.warn('Video failed to load:', e)
+        }}
         style={{
           position: 'absolute',
           top: 0,
@@ -83,6 +89,7 @@ export default function TetrisGame() {
         }}
       >
         <source src="/assets/videos/gemini_generated_video_55DF7A7E.mp4" type="video/mp4" />
+        <source src="/gemini_generated_video_55DF7A7E.mp4" type="video/mp4" />
       </video>
       
       {/* Content overlay */}
